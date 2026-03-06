@@ -274,15 +274,17 @@ export class WebFetch {
  * 获取 WebFetch 工具描述
  */
 export function getWebFetchDescription(): string {
-  return `网页内容抓取工具
-- 获取指定 URL 的网页内容
-- 支持多种输出格式: markdown (默认), text, html
-- 自动将 HTTP 升级到 HTTPS
-- 支持超时设置 (最大 120 秒)
-- 响应大小限制: 5MB
+  return `Fetches content from a specified URL
+- Takes a URL and optional format as input
+- Fetches the URL content, converts to requested format (markdown by default)
+- Returns the content in the specified format
+- Use this tool when you need to retrieve and analyze web content from a specific URL
 
-使用场景:
-- 获取网页正文内容
-- 抓取技术文档
-- 读取在线文章`
+Usage notes:
+  - The URL must be a fully-formed valid URL
+  - HTTP URLs will be automatically upgraded to HTTPS
+  - Format options: "markdown" (default), "text", or "html"
+  - This tool is read-only and does not modify any files
+  - Response size limit: 5MB
+  - Maximum timeout: 120 seconds`
 }

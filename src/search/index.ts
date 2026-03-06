@@ -41,35 +41,38 @@ export function createSearchEngine(config: Config): SearchEngineInterface {
  */
 export function getSearchEngineDescription(engine: SearchEngine): string {
   const descriptions: Record<SearchEngine, string> = {
-    duckduckgo: `DuckDuckGo 网络搜索 - 免费无需 API Key
-- 搜索互联网获取最新信息
-- 支持中英文搜索
-- 返回搜索结果列表，包含标题、链接和摘要
+    duckduckgo: `Search the web using DuckDuckGo - performs real-time web searches
+- Provides up-to-date information for current events and recent data
+- Returns search results with titles, URLs, and snippets
+- Use this tool for accessing information beyond your knowledge cutoff
+- Searches are performed automatically within a single API call
 
-使用场景:
-- 获取最新新闻和资讯
-- 查找技术文档和教程
-- 搜索产品信息和评论`,
+Usage notes:
+- Free to use, no API key required
+- Supports both English and Chinese queries
+- Best for general web searches and finding recent information`,
 
-    exa: `Exa AI 网络搜索 - AI 优化的搜索引擎
-- 使用 AI 技术优化搜索结果
-- 返回高质量、相关性强的结果
-- 支持深度搜索模式
+    exa: `Search the web using Exa AI - AI-optimized search engine with real-time capabilities
+- Provides up-to-date information for current events and recent data
+- Returns high-quality, highly relevant search results
+- Use this tool for accessing information beyond your knowledge cutoff
+- Searches are performed automatically within a single API call
 
-使用场景:
-- 需要高质量搜索结果
-- 学术研究和技术调研
-- AI 相关内容搜索`,
+Usage notes:
+- AI-powered search optimization for better relevance
+- Best for technical research and academic queries
+- Excellent for AI-related content searches`,
 
-    bocha: `博查 AI 网络搜索 - 中文友好的搜索引擎
-- 对中文搜索结果优化
-- 支持实时网页抓取
-- 返回结构化搜索结果
+    bocha: `Search the web using Bocha AI - Chinese-friendly search engine with real-time capabilities
+- Provides up-to-date information for current events and recent data
+- Optimized for Chinese language search results
+- Use this tool for accessing information beyond your knowledge cutoff
+- Searches are performed automatically within a single API call
 
-使用场景:
-- 中文内容搜索
-- 中国本地化信息查询
-- 实时资讯获取`,
+Usage notes:
+- Best for Chinese content searches
+- Optimized for China-localized information
+- Supports real-time web crawling`,
   }
 
   return descriptions[engine]
