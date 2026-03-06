@@ -244,6 +244,11 @@ export class WebFetch {
           throw new Error('Redirect to private address blocked')
         }
 
+        // DNS rebinding protection for redirect target
+        if (await resolvesToPrivateIp(absoluteRedirectUrl)) {
+          throw new Error('Redirect target resolves to private address')
+        }
+
         targetUrl = absoluteRedirectUrl
         response = await nodeFetch(targetUrl, fetchOptions)
         redirectCount++

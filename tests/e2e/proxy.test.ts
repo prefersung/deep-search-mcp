@@ -64,15 +64,14 @@ function sendRequest(
 describe('E2E: MCP Server with Proxy', () => {
   let serverProcess: ChildProcess
   let proxyServer: SimpleProxyServer
-  const PROXY_PORT = 18888
 
   beforeAll(async () => {
-    // 启动代理服务器
-    proxyServer = new SimpleProxyServer(PROXY_PORT)
+    // 启动代理服务器（使用动态端口）
+    proxyServer = new SimpleProxyServer()
     await proxyServer.start()
 
     // 启动 MCP 服务器进程，配置使用代理
-    serverProcess = spawn('node', ['dist/cli.js', '--proxy', `http://127.0.0.1:${PROXY_PORT}`], {
+    serverProcess = spawn('node', ['dist/cli.js', '--proxy', proxyServer.getUrl()], {
       cwd: process.cwd(),
       stdio: ['pipe', 'pipe', 'pipe'],
     })

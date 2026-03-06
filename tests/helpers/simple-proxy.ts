@@ -6,6 +6,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'http'
 import { connect } from 'net'
 import { URL } from 'url'
+import type { AddressInfo } from 'net'
 
 export interface ProxyLog {
   method: string
@@ -20,7 +21,7 @@ export class SimpleProxyServer {
   private logs: ProxyLog[] = []
   private requestCount = 0
 
-  constructor(port: number = 8888) {
+  constructor(port: number = 0) {
     this.port = port
   }
 
@@ -43,6 +44,8 @@ export class SimpleProxyServer {
       })
 
       this.server.listen(this.port, () => {
+        const address = this.server!.address() as AddressInfo
+        this.port = address.port
         console.log(`[Proxy] 代理服务器已启动: http://127.0.0.1:${this.port}`)
         resolve()
       })

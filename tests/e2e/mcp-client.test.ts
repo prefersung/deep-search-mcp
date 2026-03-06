@@ -84,7 +84,9 @@ describe('E2E: MCP Server', () => {
   }, 30000)
 
   afterAll(() => {
-    serverProcess.kill()
+    if (serverProcess) {
+      serverProcess.kill()
+    }
   })
 
   describe('Tool Discovery', () => {
