@@ -263,7 +263,7 @@ program
         webSearch: 'duckduckgo',
       })
 
-      const testUrl = 'https://example.com'
+      const testUrl = 'https://www.163.com'
       console.log(`  Fetching: ${testUrl}`)
 
       const startTime = Date.now()
