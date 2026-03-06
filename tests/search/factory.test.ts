@@ -47,4 +47,15 @@ describe('Search Engine Factory', () => {
     expect(engine).toBeDefined()
     expect(engine.name).toBe('bocha')
   })
+
+  it('should throw when Bocha is selected without API key', () => {
+    const config: Config = {
+      proxy: 'none',
+      timeout: 30000,
+      ignoreSSL: false,
+      webSearch: 'bocha',
+    }
+
+    expect(() => createSearchEngine(config)).toThrow(/bochaApiKey|API Key|博查搜索/)
+  })
 })

@@ -30,10 +30,10 @@ const PRIVATE_IP_PATTERNS = [
   /^0\.0\.0\.0/,
   /^\[::1\]$/,
   /^::1$/,
-  /^\[fc00:/i,
-  /^fc00:/i,
-  /^\[fe80:/i,
-  /^fe80:/i,
+  /^\[f[cd][0-9a-f]{2}:/i,
+  /^f[cd][0-9a-f]{2}:/i,
+  /^\[fe[89ab][0-9a-f]:/i,
+  /^fe[89ab][0-9a-f]:/i,
 ]
 
 const BLOCKED_HOSTNAMES = ['localhost', 'localhost.localdomain', 'ip6-localhost', 'ip6-loopback']
@@ -58,7 +58,7 @@ const BLOCKED_PORTS = [
 export function isPrivateUrl(urlString: string): boolean {
   try {
     const url = new URL(urlString)
-    let hostname = url.hostname.toLowerCase()
+    let hostname = url.hostname.toLowerCase().replace(/\.$/, '')
     const port = url.port ? parseInt(url.port) : url.protocol === 'https:' ? 443 : 80
 
     // Remove brackets from IPv6 addresses
@@ -83,7 +83,7 @@ export function isPrivateUrl(urlString: string): boolean {
       }
     }
 
-    if (BLOCKED_HOSTNAMES.includes(hostname)) {
+    if (BLOCKED_HOSTNAMES.includes(hostname) || hostname.endsWith('.localhost')) {
       return true
     }
 
@@ -118,7 +118,7 @@ export function isPrivateUrl(urlString: string): boolean {
 async function resolvesToPrivateIp(urlString: string): Promise<boolean> {
   try {
     const url = new URL(urlString)
-    const hostname = url.hostname.toLowerCase()
+    const hostname = url.hostname.toLowerCase().replace(/\.$/, '')
 
     // Skip if already an IP address (already checked by isPrivateUrl)
     const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$|^\[?[0-9a-f:]+\]?$/i

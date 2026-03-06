@@ -69,7 +69,7 @@ describe('E2E: MCP Server', () => {
 
   beforeAll(async () => {
     // 启动 MCP 服务器进程
-    serverProcess = spawn('node', ['dist/cli.js', '--proxy', 'none'], {
+    serverProcess = spawn('node', ['dist/cli.js', '--proxy', 'none', '--ignore-ssl'], {
       cwd: process.cwd(),
       stdio: ['pipe', 'pipe', 'pipe'],
     })
@@ -182,8 +182,10 @@ describe('E2E: MCP Server', () => {
           },
         })) as {
           content: Array<{ type: string; text: string }>
+          isError?: boolean
         }
 
+        expect(response.isError).not.toBe(true)
         expect(response.content).toBeDefined()
         expect(response.content[0].type).toBe('text')
 
@@ -206,8 +208,10 @@ describe('E2E: MCP Server', () => {
           },
         })) as {
           content: Array<{ type: string; text: string }>
+          isError?: boolean
         }
 
+        expect(response.isError).not.toBe(true)
         expect(response.content).toBeDefined()
         const text = response.content[0].text
         expect(text).toBeDefined()

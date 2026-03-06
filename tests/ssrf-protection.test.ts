@@ -40,6 +40,22 @@ describe('SSRF Protection', () => {
     it('should block ::1', () => {
       expect(isPrivateUrl('http://[::1]/admin')).toBe(true)
     })
+
+    it('should block IPv6 ULA fd00::/8', () => {
+      expect(isPrivateUrl('http://[fd00::1]/admin')).toBe(true)
+      expect(isPrivateUrl('http://[fd12::1]/admin')).toBe(true)
+      expect(isPrivateUrl('http://[fdff::1]/admin')).toBe(true)
+    })
+
+    it('should block subdomains of localhost', () => {
+      expect(isPrivateUrl('http://api.localhost/admin')).toBe(true)
+      expect(isPrivateUrl('http://api.localhost./admin')).toBe(true)
+    })
+
+    it('should block IPv6 link-local fe80::/10', () => {
+      expect(isPrivateUrl('http://[fe80::1]/admin')).toBe(true)
+      expect(isPrivateUrl('http://[fe90::1]/admin')).toBe(true)
+    })
   })
 
   describe('Sensitive ports', () => {

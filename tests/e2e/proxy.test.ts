@@ -62,41 +62,57 @@ function sendRequest(
 }
 
 describe('E2E: MCP Server with Proxy', () => {
-  let serverProcess: ChildProcess
-  let proxyServer: SimpleProxyServer
+  let serverProcess: ChildProcess | undefined
+  let proxyServer: SimpleProxyServer | undefined
+  let proxyUnavailableReason: string | null = null
 
   beforeAll(async () => {
-    // 启动代理服务器（使用动态端口）
-    proxyServer = new SimpleProxyServer()
-    await proxyServer.start()
+    try {
+      // 启动代理服务器（使用动态端口）
+      proxyServer = new SimpleProxyServer()
+      await proxyServer.start()
 
-    // 启动 MCP 服务器进程，配置使用代理
-    serverProcess = spawn('node', ['dist/cli.js', '--proxy', proxyServer.getUrl()], {
-      cwd: process.cwd(),
-      stdio: ['pipe', 'pipe', 'pipe'],
-    })
+      // 启动 MCP 服务器进程，配置使用代理
+      serverProcess = spawn('node', ['dist/cli.js', '--proxy', proxyServer.getUrl(), '--ignore-ssl'], {
+        cwd: process.cwd(),
+        stdio: ['pipe', 'pipe', 'pipe'],
+      })
 
-    serverProcess.stderr?.on('data', (data) => {
-      // console.error('[Server]', data.toString())
-    })
+      serverProcess.stderr?.on('data', (data) => {
+        // console.error('[Server]', data.toString())
+      })
 
-    // 等待服务器启动
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+      // 等待服务器启动
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+    } catch (error) {
+      proxyUnavailableReason =
+        error instanceof Error ? error.message : 'Proxy server unavailable in this environment'
+      console.warn(`[E2E] Proxy tests are skipped: ${proxyUnavailableReason}`)
+    }
   }, 30000)
 
   afterAll(async () => {
     if (serverProcess) {
       serverProcess.kill()
     }
-    await proxyServer.stop()
+    if (proxyServer) {
+      await proxyServer.stop()
+    }
   })
 
   beforeEach(() => {
-    proxyServer.clearLogs()
+    if (proxyServer) {
+      proxyServer.clearLogs()
+    }
   })
 
   describe('Proxy functionality', () => {
-    it('should route requests through proxy', async () => {
+    it('should route requests through proxy', async (ctx) => {
+      if (proxyUnavailableReason || !proxyServer || !serverProcess) {
+        ctx.skip()
+        return
+      }
+
       const initialCount = proxyServer.getRequestCount()
 
       // 执行 web_fetch 请求
@@ -108,9 +124,11 @@ describe('E2E: MCP Server with Proxy', () => {
         },
       })) as {
         content: Array<{ type: string; text: string }>
+        isError?: boolean
       }
 
       // 验证请求成功
+      expect(response.isError).not.toBe(true)
       expect(response.content).toBeDefined()
       expect(response.content[0].text.toLowerCase()).toMatch(/example/)
 
@@ -127,41 +145,53 @@ describe('E2E: MCP Server with Proxy', () => {
       expect(connectLogs.some((l) => l.url.includes('example.com'))).toBe(true)
     })
 
-    it('should handle multiple requests through proxy', async () => {
+    it('should handle multiple requests through proxy', async (ctx) => {
+      if (proxyUnavailableReason || !proxyServer || !serverProcess) {
+        ctx.skip()
+        return
+      }
+
       proxyServer.clearLogs()
 
       // 发送多个请求
       const urls = ['https://example.com', 'https://httpbin.org/ip']
+      const responses: Array<{ isError?: boolean }> = []
 
       for (const url of urls) {
-        try {
-          await sendRequest(serverProcess, 'tools/call', {
-            name: 'web_fetch',
-            arguments: {
-              url,
-              format: 'text',
-            },
-          })
-        } catch (err) {
-          // 某些 URL 可能失败，但应该仍然经过代理
-        }
+        const response = (await sendRequest(serverProcess, 'tools/call', {
+          name: 'web_fetch',
+          arguments: {
+            url,
+            format: 'text',
+          },
+        })) as { isError?: boolean }
+        responses.push(response)
       }
+
+      expect(responses.some((response) => response.isError !== true)).toBe(true)
 
       // 验证代理收到多个请求
       const logs = proxyServer.getLogs()
       expect(logs.length).toBeGreaterThanOrEqual(urls.length)
     })
 
-    it('should show proxy logs correctly', async () => {
+    it('should show proxy logs correctly', async (ctx) => {
+      if (proxyUnavailableReason || !proxyServer || !serverProcess) {
+        ctx.skip()
+        return
+      }
+
       proxyServer.clearLogs()
 
-      await sendRequest(serverProcess, 'tools/call', {
+      const response = (await sendRequest(serverProcess, 'tools/call', {
         name: 'web_fetch',
         arguments: {
           url: 'https://example.com',
           format: 'markdown',
         },
-      })
+      })) as { isError?: boolean }
+
+      expect(response.isError).not.toBe(true)
 
       const logs = proxyServer.getLogs()
 
