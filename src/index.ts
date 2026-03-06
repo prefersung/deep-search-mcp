@@ -28,7 +28,7 @@ const WebFetchSchema = z.object({
     .optional()
     .default('markdown')
     .describe('返回格式 (默认: markdown)'),
-  timeout: z.number().optional().describe('超时时间(秒)，最大 120'),
+  timeout: z.number().min(1).max(120).optional().describe('超时时间(秒)，1-120秒'),
 })
 
 /**

@@ -86,7 +86,9 @@ describe('E2E: MCP Server with Proxy', () => {
   }, 30000)
 
   afterAll(async () => {
-    serverProcess.kill()
+    if (serverProcess) {
+      serverProcess.kill()
+    }
     await proxyServer.stop()
   })
 
