@@ -274,17 +274,17 @@ export class WebFetch {
  * 获取 WebFetch 工具描述
  */
 export function getWebFetchDescription(): string {
-  return `Fetches content from a specified URL
+  return `Fetches content from a specified URL and converts it to readable format
+- Use this when you have a specific URL to retrieve (not for searching)
 - Takes a URL and optional format as input
 - Fetches the URL content, converts to requested format (markdown by default)
-- Returns the content in the specified format
-- Use this tool when you need to retrieve and analyze web content from a specific URL
+- Returns the full page content in the specified format
 
 Usage notes:
+  - Use web_search first to find URLs, then use this tool to fetch their content
   - The URL must be a fully-formed valid URL
   - HTTP URLs will be automatically upgraded to HTTPS
   - Format options: "markdown" (default), "text", or "html"
-  - This tool is read-only and does not modify any files
   - Response size limit: 5MB
   - Maximum timeout: 120 seconds`
 }

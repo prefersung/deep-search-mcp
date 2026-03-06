@@ -45,9 +45,10 @@ export function getSearchEngineDescription(engine: SearchEngine): string {
 - Provides up-to-date information for current events and recent data
 - Returns search results with titles, URLs, and snippets
 - Use this tool for accessing information beyond your knowledge cutoff
-- Searches are performed automatically within a single API call
+- Performs searches in a single API call
 
 Usage notes:
+- Use web_search to find information; use web_fetch to retrieve specific URLs
 - Free to use, no API key required
 - Supports both English and Chinese queries
 - Best for general web searches and finding recent information`,
@@ -56,9 +57,10 @@ Usage notes:
 - Provides up-to-date information for current events and recent data
 - Returns high-quality, highly relevant search results
 - Use this tool for accessing information beyond your knowledge cutoff
-- Searches are performed automatically within a single API call
+- Performs searches in a single API call
 
 Usage notes:
+- Use web_search to find information; use web_fetch to retrieve specific URLs
 - AI-powered search optimization for better relevance
 - Best for technical research and academic queries
 - Excellent for AI-related content searches`,
@@ -67,9 +69,10 @@ Usage notes:
 - Provides up-to-date information for current events and recent data
 - Optimized for Chinese language search results
 - Use this tool for accessing information beyond your knowledge cutoff
-- Searches are performed automatically within a single API call
+- Performs searches in a single API call
 
 Usage notes:
+- Use web_search to find information; use web_fetch to retrieve specific URLs
 - Best for Chinese content searches
 - Optimized for China-localized information
 - Supports real-time web crawling`,
