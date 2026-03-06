@@ -1,0 +1,21 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Development
+node_modules/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Build
+dist/
+*.tsbuildinfo
