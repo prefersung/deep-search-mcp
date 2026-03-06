@@ -43,7 +43,7 @@ export class SimpleProxyServer {
         reject(err)
       })
 
-      this.server.listen(this.port, () => {
+      this.server.listen(this.port, '127.0.0.1', () => {
         const address = this.server!.address() as AddressInfo
         this.port = address.port
         console.log(`[Proxy] 代理服务器已启动: http://127.0.0.1:${this.port}`)

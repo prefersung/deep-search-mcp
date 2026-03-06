@@ -14,12 +14,12 @@
     "test": "vitest",
     "test:unit": "vitest run --exclude 'tests/e2e/**'",
     "test:e2e": "vitest run tests/e2e",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest run --coverage --exclude 'tests/e2e/**'",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --project tsconfig.typecheck.json",
     "prepublishOnly": "npm run build && npm run lint && npm run test:unit"
   },
   "keywords": [
