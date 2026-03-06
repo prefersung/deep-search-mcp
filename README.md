@@ -71,7 +71,6 @@ npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bo
 |--------|------|
 | `HTTPS_PROXY` / `HTTP_PROXY` | 代理地址 |
 | `BOCHA_API_KEY` | 博查 AI 的 Bearer Token |
-| `EXA_API_KEY` | Exa AI 的 API Key |
 | `IGNORE_SSL` | 忽略 SSL 证书校验 (设置为 `true`) |
 | `NODE_TLS_REJECT_UNAUTHORIZED` | 设置为 `0` 也可忽略 SSL |
 
@@ -82,7 +81,6 @@ npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bo
 | `-p, --proxy <proxy>` | 代理设置: system \| none \| http://... | none |
 | `--web-search <engine>` | 搜索引擎: duckduckgo \| exa \| bocha | duckduckgo |
 | `--bocha-api-key <key>` | 博查 AI API Key | - |
-| `--exa-api-key <key>` | Exa AI API Key | - |
 | `-t, --timeout <ms>` | 请求超时时间(毫秒) | 30000 |
 | `--ignore-ssl` | 忽略 SSL 证书校验 | false |
 
