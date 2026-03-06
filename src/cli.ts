@@ -1,3 +1,8 @@
+// Check for --ignore-ssl flag early, before any imports
+if (process.argv.includes('--ignore-ssl')) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+}
+
 import { Command } from 'commander'
 import { startServer } from './index.js'
 import { loadConfigFromEnv, validateConfig, type Config, type SearchEngine } from './config.js'
@@ -8,7 +13,6 @@ interface CliOptions {
   proxy: string
   webSearch: string
   bochaApiKey?: string
-  exaApiKey?: string
   timeout: string
   ignoreSsl: boolean
 }
@@ -24,7 +28,6 @@ program
   .option('-p, --proxy <proxy>', '代理设置: system | none | http://host:port', 'none')
   .option('--web-search <engine>', '搜索引擎: duckduckgo | exa | bocha', 'duckduckgo')
   .option('--bocha-api-key <key>', '博查 AI API Key (建议使用环境变量 BOCHA_API_KEY)')
-  .option('--exa-api-key <key>', 'Exa AI API Key (建议使用环境变量 EXA_API_KEY)')
   .option('-t, --timeout <ms>', '请求超时时间(毫秒)', '30000')
   .option('--ignore-ssl', '忽略 SSL 证书校验 (解决代理证书问题)', false)
   .action(async (options: CliOptions) => {
@@ -33,7 +36,6 @@ program
         proxy: options.proxy,
         webSearch: options.webSearch as SearchEngine,
         bochaApiKey: options.bochaApiKey,
-        exaApiKey: options.exaApiKey,
         timeout: parseInt(options.timeout, 10),
         ignoreSSL: options.ignoreSsl,
       })
@@ -68,10 +70,10 @@ program
         console.error('   This may lead to man-in-the-middle attack risks. Use only in trusted networks.')
       }
 
-      if (options.bochaApiKey || options.exaApiKey) {
+      if (options.bochaApiKey) {
         console.error('')
         console.error('⚠️  TIP: API Keys passed via command line are visible in process list.')
-        console.error('   Recommend using environment variables: BOCHA_API_KEY or EXA_API_KEY')
+        console.error('   Recommend using environment variables: BOCHA_API_KEY')
       }
 
       console.error('----------------------------------------')
@@ -138,6 +140,13 @@ program
     console.log('  Proxy Connection Diagnostics')
     console.log('========================================')
     console.log('')
+
+    // Security warning for SSL ignore
+    if (options.ignoreSsl) {
+      console.log('⚠️  WARNING: SSL certificate verification is disabled!')
+      console.log('   This may lead to man-in-the-middle attack risks.')
+      console.log('')
+    }
 
     // Step 1: Detect proxy
     console.log('[1/3] Detecting proxy settings...')

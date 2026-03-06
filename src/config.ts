@@ -11,8 +11,6 @@ export interface Config {
   webSearch: SearchEngine
   /** 博查 API Key */
   bochaApiKey?: string
-  /** Exa API Key (如果需要) */
-  exaApiKey?: string
   /** 请求超时(毫秒) */
   timeout: number
   /** 忽略 SSL 证书校验 */
@@ -40,7 +38,6 @@ export function loadConfigFromEnv(partial: Partial<Config> = {}): Config {
     webSearch:
       partial.webSearch || (process.env.WEB_SEARCH as SearchEngine) || DEFAULT_CONFIG.webSearch,
     bochaApiKey: partial.bochaApiKey || process.env.BOCHA_API_KEY,
-    exaApiKey: partial.exaApiKey || process.env.EXA_API_KEY,
     timeout: partial.timeout || parseInt(process.env.TIMEOUT || '') || DEFAULT_CONFIG.timeout,
     ignoreSSL:
       partial.ignoreSSL ??
