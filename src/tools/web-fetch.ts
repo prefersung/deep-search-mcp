@@ -233,17 +233,22 @@ export class WebFetch {
   }
 
   private extractTextFromHTML(html: string): string {
-    // 使用 cheerio 解析 HTML，类似 OpenCode 的 HTMLRewriter 方法
-    const $ = cheerio.load(html)
+    try {
+      // 使用 cheerio 解析 HTML，类似 OpenCode 的 HTMLRewriter 方法
+      const $ = cheerio.load(html)
 
-    // 移除不需要的标签
-    $('script, style, noscript, iframe, object, embed').remove()
+      // 移除不需要的标签
+      $('script, style, noscript, iframe, object, embed').remove()
 
-    // 提取所有文本内容
-    const text = $('body').text() || $.text()
+      // 提取所有文本内容
+      const text = $('body').text() || $.text()
 
-    // 清理多余空白
-    return text.replace(/\s+/g, ' ').trim()
+      // 清理多余空白
+      return text.replace(/\s+/g, ' ').trim()
+    } catch (error) {
+      // Fallback to basic regex if cheerio fails
+      return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    }
   }
 
   private convertHTMLToMarkdown(html: string): string {
