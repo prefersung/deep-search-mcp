@@ -1,5 +1,6 @@
 import TurndownService from 'turndown'
 import * as cheerio from 'cheerio'
+import { promises as dns } from 'dns'
 import { getProxyAgent } from '../proxy/index.js'
 import type { Config } from '../config.js'
 import type { FetchOptions } from '../types.js'
@@ -111,6 +112,50 @@ export function isPrivateUrl(urlString: string): boolean {
   }
 }
 
+/**
+ * Check if domain resolves to private IP (DNS rebinding protection)
+ */
+async function resolvesToPrivateIp(urlString: string): Promise<boolean> {
+  try {
+    const url = new URL(urlString)
+    const hostname = url.hostname.toLowerCase()
+
+    // Skip if already an IP address (already checked by isPrivateUrl)
+    const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$|^\[?[0-9a-f:]+\]?$/i
+    if (ipPattern.test(hostname)) {
+      return false
+    }
+
+    // Resolve IPv4 addresses
+    try {
+      const addresses = await dns.resolve4(hostname)
+      for (const ip of addresses) {
+        if (isPrivateUrl(`http://${ip}`)) {
+          return true
+        }
+      }
+    } catch {
+      // Ignore DNS resolution errors for IPv4
+    }
+
+    // Resolve IPv6 addresses
+    try {
+      const addresses = await dns.resolve6(hostname)
+      for (const ip of addresses) {
+        if (isPrivateUrl(`http://[${ip}]`)) {
+          return true
+        }
+      }
+    } catch {
+      // Ignore DNS resolution errors for IPv6
+    }
+
+    return false
+  } catch {
+    return false
+  }
+}
+
 export class WebFetch {
   private proxy: string
   private defaultTimeout: number
@@ -133,6 +178,11 @@ export class WebFetch {
     // SSRF protection: check for private addresses
     if (isPrivateUrl(url)) {
       throw new Error('Access to private addresses, local addresses or sensitive ports is not allowed')
+    }
+
+    // SSRF protection: check DNS resolution (prevent DNS rebinding)
+    if (await resolvesToPrivateIp(url)) {
+      throw new Error('Domain resolves to private address')
     }
 
     // Auto upgrade HTTP to HTTPS

@@ -11,7 +11,7 @@ import { resolveProxyUrl } from './proxy/index.js'
 import { detectSystemProxy } from './proxy/windows.js'
 
 const require = createRequire(import.meta.url)
-const { version } = require('../package.json')
+const { version } = require('../package.json') as { version: string }
 
 interface CliOptions {
   proxy: string
