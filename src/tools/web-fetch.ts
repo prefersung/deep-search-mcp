@@ -1,4 +1,5 @@
 import TurndownService from 'turndown'
+import * as cheerio from 'cheerio'
 import { getProxyAgent } from '../proxy/index.js'
 import type { Config } from '../config.js'
 import type { FetchOptions } from '../types.js'
@@ -232,26 +233,17 @@ export class WebFetch {
   }
 
   private extractTextFromHTML(html: string): string {
-    // 简单的 HTML 到文本转换
-    const text = html
-      // 移除 script 和 style 标签及其内容
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
-      // 移除所有 HTML 标签
-      .replace(/<[^>]+>/g, ' ')
-      // 解码 HTML 实体
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      // 清理空白
-      .replace(/\s+/g, ' ')
-      .trim()
+    // 使用 cheerio 解析 HTML，类似 OpenCode 的 HTMLRewriter 方法
+    const $ = cheerio.load(html)
 
-    return text
+    // 移除不需要的标签
+    $('script, style, noscript, iframe, object, embed').remove()
+
+    // 提取所有文本内容
+    const text = $('body').text() || $.text()
+
+    // 清理多余空白
+    return text.replace(/\s+/g, ' ').trim()
   }
 
   private convertHTMLToMarkdown(html: string): string {

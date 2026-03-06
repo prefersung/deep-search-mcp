@@ -1,6 +1,6 @@
 {
   "name": "@chenpu17/web-bridge-mcp",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "MCP server with proxy support for web search and fetch - Bridge intranet to internet",
   "type": "module",
   "main": "dist/index.js",
@@ -48,6 +48,7 @@
   "homepage": "https://github.com/chenpu17/web-bridge-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "cheerio": "^1.2.0",
     "commander": "^12.0.0",
     "https-proxy-agent": "^7.0.0",
     "node-fetch": "^3.3.2",
