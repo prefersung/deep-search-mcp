@@ -226,7 +226,7 @@ describe('E2E: MCP Server', () => {
       }
 
       expect(response.isError).toBe(true)
-      expect(response.content[0].text).toMatch(/内网地址|不允许/)
+      expect(response.content[0].text).toMatch(/private addresses|not allowed/)
     })
   })
 })

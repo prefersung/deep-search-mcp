@@ -57,8 +57,30 @@ const BLOCKED_PORTS = [
 export function isPrivateUrl(urlString: string): boolean {
   try {
     const url = new URL(urlString)
-    const hostname = url.hostname.toLowerCase()
+    let hostname = url.hostname.toLowerCase()
     const port = url.port ? parseInt(url.port) : url.protocol === 'https:' ? 443 : 80
+
+    // Remove brackets from IPv6 addresses
+    if (hostname.startsWith('[') && hostname.endsWith(']')) {
+      hostname = hostname.slice(1, -1)
+    }
+
+    // Check for IPv4-mapped IPv6 addresses (::ffff:127.0.0.1 or ::ffff:7f00:1)
+    if (hostname.includes('::ffff:')) {
+      // Extract IPv4 part (could be in decimal or hex format)
+      const ipv4Match = hostname.match(/::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/)
+      if (ipv4Match) {
+        hostname = ipv4Match[1]
+      } else {
+        // Handle hex format like ::ffff:7f00:1 (which is 127.0.0.1)
+        const hexMatch = hostname.match(/::ffff:([0-9a-f]+):([0-9a-f]+)/)
+        if (hexMatch) {
+          const hex1 = parseInt(hexMatch[1], 16)
+          const hex2 = parseInt(hexMatch[2], 16)
+          hostname = `${(hex1 >> 8) & 0xff}.${hex1 & 0xff}.${(hex2 >> 8) & 0xff}.${hex2 & 0xff}`
+        }
+      }
+    }
 
     if (BLOCKED_HOSTNAMES.includes(hostname)) {
       return true
@@ -114,7 +136,7 @@ export class WebFetch {
     }
 
     // Auto upgrade HTTP to HTTPS
-    const targetUrl = url.startsWith('http://') ? url.replace('http://', 'https://') : url
+    let targetUrl = url.startsWith('http://') ? url.replace('http://', 'https://') : url
 
     const actualTimeout = Math.min((timeout || this.defaultTimeout / 1000) * 1000, MAX_TIMEOUT)
 
@@ -150,9 +172,36 @@ export class WebFetch {
         agent,
         headers,
         signal: controller.signal,
+        redirect: 'manual', // Disable auto-redirect for SSRF protection
       }
 
+      // Manual redirect handling with SSRF validation
       let response = await nodeFetch(targetUrl, fetchOptions)
+      let redirectCount = 0
+      const MAX_REDIRECTS = 5
+
+      while (
+        redirectCount < MAX_REDIRECTS &&
+        response.status >= 300 &&
+        response.status < 400 &&
+        response.headers.get('location')
+      ) {
+        const redirectUrl = response.headers.get('location')!
+        const absoluteRedirectUrl = new URL(redirectUrl, targetUrl).href
+
+        // Validate redirect target for SSRF
+        if (isPrivateUrl(absoluteRedirectUrl)) {
+          throw new Error('Redirect to private address blocked')
+        }
+
+        targetUrl = absoluteRedirectUrl
+        response = await nodeFetch(targetUrl, fetchOptions)
+        redirectCount++
+      }
+
+      if (redirectCount >= MAX_REDIRECTS) {
+        throw new Error('Too many redirects')
+      }
 
       if (response.status === 403 && response.headers.get('cf-mitigated') === 'challenge') {
         response = await nodeFetch(targetUrl, {

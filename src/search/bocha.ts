@@ -63,7 +63,7 @@ export class BochaSearch extends BaseSearchEngine {
     }
   }
 
-  async search(options: SearchOptions): Promise<SearchResult[]> {
+  async search(options: SearchOptions, retryCount = 0): Promise<SearchResult[]> {
     const { query, numResults = this.DEFAULT_NUM_RESULTS } = options
 
     // 确保已初始化 session
@@ -106,9 +106,9 @@ export class BochaSearch extends BaseSearchEngine {
 
       if (!response.ok) {
         // If session expired, clear session and retry once
-        if (response.status === 400 || response.status === 404) {
+        if ((response.status === 400 || response.status === 404) && retryCount === 0) {
           this.sessionId = null
-          return this.search(options)
+          return this.search(options, retryCount + 1)
         }
         throw new Error(`Bocha search failed: HTTP ${response.status}`)
       }

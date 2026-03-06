@@ -3,11 +3,15 @@ if (process.argv.includes('--ignore-ssl')) {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 }
 
+import { createRequire } from 'module'
 import { Command } from 'commander'
 import { startServer } from './index.js'
 import { loadConfigFromEnv, validateConfig, type Config, type SearchEngine } from './config.js'
 import { resolveProxyUrl } from './proxy/index.js'
 import { detectSystemProxy } from './proxy/windows.js'
+
+const require = createRequire(import.meta.url)
+const { version } = require('../package.json')
 
 interface CliOptions {
   proxy: string
@@ -24,7 +28,7 @@ program
   .description(
     'MCP Server with proxy support for web search and fetch - Bridge intranet to internet'
   )
-  .version('1.0.0')
+  .version(version)
   .option('-p, --proxy <proxy>', '代理设置: system | none | http://host:port', 'none')
   .option('--web-search <engine>', '搜索引擎: duckduckgo | exa | bocha', 'duckduckgo')
   .option('--bocha-api-key <key>', '博查 AI API Key (建议使用环境变量 BOCHA_API_KEY)')
