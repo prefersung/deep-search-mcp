@@ -17,6 +17,10 @@ import { Context7Bridge } from './context7/bridge.js'
 import { createSearchEngine, getSearchEngineDescription } from './search/index.js'
 import { WebFetch, getWebFetchDescription } from './tools/web-fetch.js'
 
+export interface ServerRuntime {
+  close(): Promise<void>
+}
+
 // 工具参数 Schema
 const WebSearchSchema = z.object({
   query: z.string().describe('搜索查询内容'),
@@ -36,7 +40,7 @@ const WebFetchSchema = z.object({
 /**
  * 启动 MCP Server
  */
-export async function startServer(config: Config): Promise<void> {
+export async function startServer(config: Config): Promise<ServerRuntime> {
   // 创建搜索引擎实例
   const searchEngine = createSearchEngine(config)
   const webFetch = new WebFetch(config)
@@ -146,7 +150,39 @@ export async function startServer(config: Config): Promise<void> {
 
   // 启动传输
   const transport = new StdioServerTransport()
+  let bridgeClosed = false
+  let runtimeClosed = false
+
+  const closeContext7Bridge = async (): Promise<void> => {
+    if (bridgeClosed) {
+      return
+    }
+
+    bridgeClosed = true
+    await context7Bridge.close()
+  }
+
+  transport.onclose = () => {
+    void closeContext7Bridge()
+  }
+
   await server.connect(transport)
 
   console.error('MCP Server 已启动，等待连接...')
+
+  return {
+    close: async () => {
+      if (runtimeClosed) {
+        return
+      }
+
+      runtimeClosed = true
+
+      try {
+        await transport.close()
+      } finally {
+        await closeContext7Bridge()
+      }
+    },
+  }
 }

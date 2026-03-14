@@ -6,6 +6,7 @@ if (process.argv.includes('--ignore-ssl')) {
 import { createRequire } from 'module'
 import { Command } from 'commander'
 import { startServer } from './index.js'
+import type { ServerRuntime } from './index.js'
 import {
   DEFAULT_CONTEXT7_CONFIG,
   loadConfigFromEnv,
@@ -47,6 +48,37 @@ function getCliOptionValue(flags: string[], fallback?: string): string | undefin
   }
 
   return fallback
+}
+
+function registerShutdownHandlers(runtime: ServerRuntime | void): void {
+  if (!runtime) {
+    return
+  }
+
+  let cleanupPromise: Promise<void> | null = null
+
+  const cleanup = (): Promise<void> => {
+    if (!cleanupPromise) {
+      cleanupPromise = runtime.close().catch(error => {
+        console.error(
+          '[Shutdown] Failed to close runtime:',
+          error instanceof Error ? error.message : error
+        )
+      })
+    }
+
+    return cleanupPromise
+  }
+
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.once(signal, () => {
+      void cleanup().finally(() => process.exit(0))
+    })
+  }
+
+  process.once('beforeExit', () => {
+    void cleanup()
+  })
 }
 
 const program = new Command()
@@ -141,7 +173,8 @@ program
       console.error('')
 
       // Start MCP Server
-      await startServer(config)
+      const runtime = await startServer(config)
+      registerShutdownHandlers(runtime)
     } catch (error) {
       console.error('Startup failed:', error instanceof Error ? error.message : error)
       process.exit(1)

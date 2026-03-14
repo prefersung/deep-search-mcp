@@ -90,6 +90,23 @@ describe('Context7Bridge', () => {
     vi.unstubAllGlobals()
   })
 
+  it('should return no tools when bridge is disabled', async () => {
+    const bridge = new Context7Bridge({
+      proxy: 'none',
+      timeout: 30000,
+      ignoreSSL: false,
+      webSearch: 'duckduckgo',
+      context7: {
+        enabled: false,
+        url: 'https://mcp.context7.com/mcp',
+      },
+    })
+
+    await expect(bridge.listTools()).resolves.toEqual([])
+    expect(bridge.canHandleTool('resolve-library-id')).toBe(false)
+    expect(mockState.clientListTools).not.toHaveBeenCalled()
+  })
+
   it('should list remote tools and mark them as handled', async () => {
     mockState.clientListTools.mockResolvedValue({
       tools: [
@@ -143,6 +160,40 @@ describe('Context7Bridge', () => {
     }
     expect(fetchOptions.headers.get('CONTEXT7_API_KEY')).toBe('ctx7sk_test')
     expect(fetchOptions.dispatcher.options.uri).toBe('http://proxy.example.com:8080')
+  })
+
+  it('should fall back to built-in tool definitions when discovery fails', async () => {
+    const logger = {
+      error: vi.fn(),
+    }
+
+    mockState.clientListTools.mockRejectedValue(new Error('network down'))
+
+    const bridge = new Context7Bridge(
+      {
+        proxy: 'none',
+        timeout: 30000,
+        ignoreSSL: false,
+        webSearch: 'duckduckgo',
+        context7: {
+          enabled: true,
+          url: 'https://mcp.context7.com/mcp',
+        },
+      },
+      logger
+    )
+
+    const tools = await bridge.listTools()
+
+    expect(mockState.clientListTools).toHaveBeenCalledTimes(2)
+    expect(tools.map(tool => tool.name)).toEqual(['resolve-library-id', 'query-docs'])
+    expect(tools[0]?.inputSchema).toMatchObject({
+      type: 'object',
+      required: ['query', 'libraryName'],
+    })
+    expect(logger.error).toHaveBeenCalledWith(
+      '[Context7] Failed to list remote tools: network down'
+    )
   })
 
   it('should reconnect and retry when remote call fails once', async () => {

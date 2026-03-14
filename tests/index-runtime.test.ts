@@ -5,6 +5,7 @@ const mockState = vi.hoisted(() => {
   return {
     listHandler: undefined as undefined | ((request?: unknown) => unknown),
     callHandler: undefined as undefined | ((request: unknown) => unknown),
+    transportOnClose: undefined as undefined | (() => void),
     searchEngine: {
       search: vi.fn(),
     },
@@ -12,6 +13,7 @@ const mockState = vi.hoisted(() => {
     context7ListTools: vi.fn().mockResolvedValue([]),
     context7CallTool: vi.fn(),
     context7CanHandleTool: vi.fn().mockReturnValue(false),
+    context7Close: vi.fn().mockResolvedValue(undefined),
   }
 })
 
@@ -34,7 +36,13 @@ vi.mock('@modelcontextprotocol/sdk/server/index.js', () => {
 })
 
 vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => {
-  class MockStdioServerTransport {}
+  class MockStdioServerTransport {
+    onclose?: () => void
+
+    async close(): Promise<void> {
+      this.onclose?.()
+    }
+  }
   return { StdioServerTransport: MockStdioServerTransport }
 })
 
@@ -73,6 +81,10 @@ vi.mock('../src/context7/bridge.js', () => {
     async callTool(params: unknown) {
       return mockState.context7CallTool(params)
     }
+
+    async close() {
+      return mockState.context7Close()
+    }
   }
 
   return { Context7Bridge: MockContext7Bridge }
@@ -91,11 +103,13 @@ describe('MCP Server Runtime', () => {
   beforeEach(() => {
     mockState.listHandler = undefined
     mockState.callHandler = undefined
+    mockState.transportOnClose = undefined
     mockState.searchEngine.search.mockReset()
     mockState.webFetch.mockReset()
     mockState.context7ListTools.mockReset().mockResolvedValue([])
     mockState.context7CallTool.mockReset()
     mockState.context7CanHandleTool.mockReset().mockReturnValue(false)
+    mockState.context7Close.mockReset().mockResolvedValue(undefined)
   })
 
   it('should register tools and expose schemas', async () => {
@@ -212,5 +226,13 @@ describe('MCP Server Runtime', () => {
     })
     expect(response.isError).toBeUndefined()
     expect(response.content[0]?.text).toBe('context7 result')
+  })
+
+  it('should close Context7 bridge when runtime is closed', async () => {
+    const runtime = await startServer(config)
+
+    await runtime.close()
+
+    expect(mockState.context7Close).toHaveBeenCalledTimes(1)
   })
 })

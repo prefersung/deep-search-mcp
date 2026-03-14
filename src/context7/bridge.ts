@@ -8,8 +8,74 @@ import { DEFAULT_CONTEXT7_CONFIG } from '../config.js'
 import { resolveProxyUrl } from '../proxy/index.js'
 
 type Context7CallToolResult = Awaited<ReturnType<Client['callTool']>>
+export interface Context7Logger {
+  error(message: string): void
+}
 
-const FALLBACK_CONTEXT7_TOOL_NAMES = new Set(['resolve-library-id', 'query-docs'])
+const FALLBACK_CONTEXT7_TOOLS: Tool[] = [
+  {
+    name: 'resolve-library-id',
+    description: 'Resolve a library name to a Context7-compatible library ID.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'The task, topic, or problem you want to solve.',
+        },
+        libraryName: {
+          type: 'string',
+          description: 'The library or package name to resolve.',
+        },
+      },
+      required: ['query', 'libraryName'],
+    },
+  },
+  {
+    name: 'query-docs',
+    description: 'Query official Context7 documentation and examples for a library.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        libraryId: {
+          type: 'string',
+          description: 'The Context7-compatible library ID, such as /vercel/next.js.',
+        },
+        query: {
+          type: 'string',
+          description: 'The documentation question or task to answer.',
+        },
+      },
+      required: ['libraryId', 'query'],
+    },
+  },
+]
+
+const FALLBACK_CONTEXT7_TOOL_NAMES = new Set(FALLBACK_CONTEXT7_TOOLS.map(tool => tool.name))
+
+function cloneTools(tools: Tool[]): Tool[] {
+  return tools.map(tool => ({
+    ...tool,
+    inputSchema:
+      tool.inputSchema && typeof tool.inputSchema === 'object'
+        ? { ...tool.inputSchema }
+        : tool.inputSchema,
+  }))
+}
+
+function mergeTools(tools: Tool[]): Tool[] {
+  const fallbackByName = new Map(FALLBACK_CONTEXT7_TOOLS.map(tool => [tool.name, tool]))
+  const merged = tools.map(tool => {
+    fallbackByName.delete(tool.name)
+    return tool
+  })
+
+  for (const fallbackTool of fallbackByName.values()) {
+    merged.push(fallbackTool)
+  }
+
+  return cloneTools(merged)
+}
 
 function mergeAbortSignals(signals: Array<AbortSignal | undefined>): AbortSignal | undefined {
   const activeSignals = signals.filter((signal): signal is AbortSignal => signal !== undefined)
@@ -49,15 +115,16 @@ export class Context7Bridge {
   private readonly proxy: string
   private readonly timeout: number
   private readonly ignoreSSL: boolean
+  private readonly logger: Context7Logger
 
   private client: Client | null = null
   private transport: StreamableHTTPClientTransport | null = null
   private connectPromise: Promise<void> | null = null
-  private cachedTools: Tool[] = []
+  private cachedTools: Tool[] = cloneTools(FALLBACK_CONTEXT7_TOOLS)
   private readonly knownToolNames = new Set(FALLBACK_CONTEXT7_TOOL_NAMES)
   private dispatcher: Dispatcher | null = null
 
-  constructor(config: Config) {
+  constructor(config: Config, logger: Context7Logger = console) {
     const context7 = config.context7 ?? DEFAULT_CONTEXT7_CONFIG
 
     this.enabled = context7.enabled
@@ -66,6 +133,7 @@ export class Context7Bridge {
     this.proxy = config.proxy
     this.timeout = config.timeout
     this.ignoreSSL = config.ignoreSSL
+    this.logger = logger
   }
 
   isEnabled(): boolean {
@@ -82,14 +150,13 @@ export class Context7Bridge {
     }
 
     try {
-      await this.ensureConnected()
-      const tools = (await this.client!.listTools()).tools
-      this.cacheTools(tools)
-      return tools
+      return await this.withReconnect(async () => {
+        const tools = (await this.client!.listTools()).tools
+        this.cacheTools(tools)
+        return this.cachedTools
+      })
     } catch (error) {
-      console.error(
-        `[Context7] Failed to list remote tools: ${error instanceof Error ? error.message : String(error)}`
-      )
+      this.logError('Failed to list remote tools', error)
       return this.cachedTools
     }
   }
@@ -145,9 +212,7 @@ export class Context7Bridge {
       fetch: this.createFetch(),
     })
     transport.onerror = error => {
-      console.error(
-        `[Context7] Remote transport error: ${error instanceof Error ? error.message : String(error)}`
-      )
+      this.logError('Remote transport error', error)
     }
     transport.onclose = () => {
       this.client = null
@@ -166,14 +231,10 @@ export class Context7Bridge {
   }
 
   private cacheTools(tools: Tool[]): void {
-    this.cachedTools = tools
+    this.cachedTools = mergeTools(tools)
     this.knownToolNames.clear()
 
-    for (const fallbackToolName of FALLBACK_CONTEXT7_TOOL_NAMES) {
-      this.knownToolNames.add(fallbackToolName)
-    }
-
-    for (const tool of tools) {
+    for (const tool of this.cachedTools) {
       this.knownToolNames.add(tool.name)
     }
   }
@@ -183,9 +244,7 @@ export class Context7Bridge {
       try {
         await this.transport.close()
       } catch (error) {
-        console.error(
-          `[Context7] Failed to close remote transport: ${error instanceof Error ? error.message : String(error)}`
-        )
+        this.logError('Failed to close remote transport', error)
       }
     }
 
@@ -193,9 +252,7 @@ export class Context7Bridge {
       try {
         await this.dispatcher.close()
       } catch (error) {
-        console.error(
-          `[Context7] Failed to close dispatcher: ${error instanceof Error ? error.message : String(error)}`
-        )
+        this.logError('Failed to close dispatcher', error)
       }
     }
 
@@ -255,5 +312,11 @@ export class Context7Bridge {
     }
 
     return undefined
+  }
+
+  private logError(message: string, error: unknown): void {
+    this.logger.error(
+      `[Context7] ${message}: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 }
