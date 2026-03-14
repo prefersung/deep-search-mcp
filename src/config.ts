@@ -4,6 +4,15 @@
 
 export type SearchEngine = 'duckduckgo' | 'exa' | 'bocha'
 
+export interface Context7Settings {
+  /** 是否启用官方 Context7 MCP 透传 */
+  enabled: boolean
+  /** 官方 Context7 远端 MCP 地址 */
+  url: string
+  /** 可选 API Key */
+  apiKey?: string
+}
+
 export interface Config {
   /** 代理设置: 'system' | 'none' | 代理URL */
   proxy: string
@@ -15,6 +24,13 @@ export interface Config {
   timeout: number
   /** 忽略 SSL 证书校验 */
   ignoreSSL: boolean
+  /** Context7 官方 MCP 透传配置 */
+  context7?: Context7Settings
+}
+
+export const DEFAULT_CONTEXT7_CONFIG: Context7Settings = {
+  enabled: false,
+  url: 'https://mcp.context7.com/mcp',
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -22,12 +38,28 @@ export const DEFAULT_CONFIG: Config = {
   webSearch: 'duckduckgo',
   timeout: 30000,
   ignoreSSL: false,
+  context7: { ...DEFAULT_CONTEXT7_CONFIG },
 }
 
 /**
  * 从环境变量加载配置
  */
-export function loadConfigFromEnv(partial: Partial<Config> = {}): Config {
+export function loadConfigFromEnv(
+  partial: Omit<Partial<Config>, 'context7'> & { context7?: Partial<Context7Settings> } = {}
+): Config {
+  const partialContext7: Partial<Context7Settings> = partial.context7 ?? {}
+  const context7ApiKey = partialContext7.apiKey || process.env.CONTEXT7_API_KEY
+  const context7Url = partialContext7.url || process.env.CONTEXT7_MCP_URL || DEFAULT_CONTEXT7_CONFIG.url
+  const context7Enabled =
+    partialContext7.enabled ??
+    (process.env.ENABLE_CONTEXT7 === 'true' ||
+      Boolean(
+        partialContext7.apiKey ||
+          partialContext7.url ||
+          process.env.CONTEXT7_API_KEY ||
+          process.env.CONTEXT7_MCP_URL
+      ))
+
   return {
     proxy:
       partial.proxy ||
@@ -43,6 +75,11 @@ export function loadConfigFromEnv(partial: Partial<Config> = {}): Config {
       partial.ignoreSSL ??
       (process.env.IGNORE_SSL === 'true' || process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') ??
       DEFAULT_CONFIG.ignoreSSL,
+    context7: {
+      enabled: context7Enabled,
+      url: context7Url,
+      apiKey: context7ApiKey,
+    },
   }
 }
 
@@ -70,6 +107,21 @@ export function validateConfig(config: Config): void {
     } catch (e) {
       if (e instanceof TypeError) {
         throw new Error(`Invalid proxy URL format: ${config.proxy}`)
+      }
+      throw e
+    }
+  }
+
+  const context7 = config.context7
+  if (context7?.enabled) {
+    try {
+      const url = new URL(context7.url)
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('Context7 MCP URL must use http or https protocol')
+      }
+    } catch (e) {
+      if (e instanceof TypeError) {
+        throw new Error(`Invalid Context7 MCP URL format: ${context7.url}`)
       }
       throw e
     }

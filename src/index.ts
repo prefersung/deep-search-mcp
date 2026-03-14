@@ -8,10 +8,12 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   type CallToolRequest,
+  type Tool,
 } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import type { Config } from './config.js'
+import { Context7Bridge } from './context7/bridge.js'
 import { createSearchEngine, getSearchEngineDescription } from './search/index.js'
 import { WebFetch, getWebFetchDescription } from './tools/web-fetch.js'
 
@@ -38,6 +40,7 @@ export async function startServer(config: Config): Promise<void> {
   // 创建搜索引擎实例
   const searchEngine = createSearchEngine(config)
   const webFetch = new WebFetch(config)
+  const context7Bridge = new Context7Bridge(config)
 
   // 创建 MCP Server
   const server = new Server(
@@ -53,20 +56,22 @@ export async function startServer(config: Config): Promise<void> {
   )
 
   server.setRequestHandler(ListToolsRequestSchema, () => {
-    const tools = [
+    const tools: Tool[] = [
       {
         name: 'web_search',
         description: getSearchEngineDescription(config.webSearch),
-        inputSchema: zodToJsonSchema(WebSearchSchema),
+        inputSchema: zodToJsonSchema(WebSearchSchema) as Tool['inputSchema'],
       },
       {
         name: 'web_fetch',
         description: getWebFetchDescription(),
-        inputSchema: zodToJsonSchema(WebFetchSchema),
+        inputSchema: zodToJsonSchema(WebFetchSchema) as Tool['inputSchema'],
       },
     ]
 
-    return { tools }
+    return context7Bridge.listTools().then((context7Tools) => ({
+      tools: [...tools, ...context7Tools],
+    }))
   })
 
   // 注册工具调用处理器
@@ -118,6 +123,10 @@ export async function startServer(config: Config): Promise<void> {
         }
 
         default:
+          if (context7Bridge.canHandleTool(name)) {
+            return context7Bridge.callTool({ name, arguments: args })
+          }
+
           throw new Error(`Unknown tool: ${name}`)
       }
     } catch (error) {

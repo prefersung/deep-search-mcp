@@ -26,7 +26,24 @@ jobs:
       - name: Run tests
         run: npm run test:unit
 
+      - name: Determine npm dist-tag
+        id: dist_tag
+        shell: bash
+        run: |
+          if [[ "${{ github.event.release.prerelease }}" == "true" ]]; then
+            echo "tag=beta" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish to npm
         run: npm publish --access public
+        if: steps.dist_tag.outputs.tag == 'latest'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish prerelease to npm
+        run: npm publish --tag beta --access public
+        if: steps.dist_tag.outputs.tag == 'beta'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

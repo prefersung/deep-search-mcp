@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/@chenpu%2Fweb-bridge-mcp.svg)](https://badge.fury.io/js/@chenpu%2Fweb-bridge-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-支持代理配置的 MCP Server，提供 Web 搜索和网页抓取能力。
+支持代理配置的 MCP Server，提供 Web 搜索、网页抓取，以及官方 Context7 文档能力透传。
 
 **专为内网环境设计**，让无法直接访问外网的 AI 编程工具（如 Claude Code、OpenCode）也能获取互联网信息。
 
@@ -14,6 +14,8 @@
 - **SSL 证书忽略**: 支持忽略 SSL 证书校验，解决代理导致的证书问题
 - **多种搜索引擎**: DuckDuckGo（免费）、Exa AI、博查 AI
 - **网页抓取**: 支持 Markdown、纯文本、HTML 格式输出
+- **官方 Context7 透传**: 直连 `https://mcp.context7.com/mcp`，暴露官方 `resolve-library-id` / `query-docs` 工具
+- **Context7 可选鉴权**: 支持 `CONTEXT7_API_KEY`，不配置也可匿名基础使用
 - **npx 运行**: 无需安装，一条命令即可使用
 
 ## 快速开始
@@ -21,6 +23,9 @@
 ```bash
 # 使用 npx 直接运行（推荐）
 npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
+
+# 启用官方 Context7
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7
 
 # 或全局安装
 npm install -g @chenpu17/web-bridge-mcp
@@ -45,6 +50,19 @@ npx @chenpu17/web-bridge-mcp --proxy http://proxy.company.com:8080
 npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
 ```
 
+### 启用 Context7
+
+```bash
+# 启用官方 Context7 MCP 透传
+npx @chenpu17/web-bridge-mcp --context7
+
+# 内网推荐：系统代理 + 忽略 SSL + Context7
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7
+
+# 配置 Context7 API Key（可选，提高限额）
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7 --context7-api-key ctx7sk_xxx
+```
+
 ### 搜索引擎配置
 
 ```bash
@@ -61,7 +79,10 @@ npx @chenpu17/web-bridge-mcp --web-search bocha --bocha-api-key sk-xxx
 ### 完整示例（企业内网推荐配置）
 
 ```bash
-# 使用系统代理 + 忽略 SSL + 博查搜索
+# 使用系统代理 + 忽略 SSL + DuckDuckGo + 官方 Context7
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7
+
+# 使用系统代理 + 忽略 SSL + 博查搜索 + 官方 Context7
 npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bocha-api-key sk-xxx
 ```
 
@@ -71,6 +92,9 @@ npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bo
 |--------|------|
 | `HTTPS_PROXY` / `HTTP_PROXY` | 代理地址 |
 | `BOCHA_API_KEY` | 博查 AI 的 Bearer Token |
+| `CONTEXT7_API_KEY` | Context7 API Key（可选） |
+| `CONTEXT7_MCP_URL` | Context7 MCP URL，默认 `https://mcp.context7.com/mcp` |
+| `ENABLE_CONTEXT7` | 启用 Context7（设置为 `true`） |
 | `IGNORE_SSL` | 忽略 SSL 证书校验 (设置为 `true`) |
 | `NODE_TLS_REJECT_UNAUTHORIZED` | 设置为 `0` 也可忽略 SSL |
 
@@ -83,6 +107,9 @@ npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bo
 | `--bocha-api-key <key>` | 博查 AI API Key | - |
 | `-t, --timeout <ms>` | 请求超时时间(毫秒) | 30000 |
 | `--ignore-ssl` | 忽略 SSL 证书校验 | false |
+| `--context7` | 启用官方 Context7 MCP 透传 | false |
+| `--context7-api-key <key>` | Context7 API Key（可选） | - |
+| `--context7-url <url>` | Context7 MCP URL | `https://mcp.context7.com/mcp` |
 
 ### 检测系统代理
 
@@ -103,6 +130,9 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy http://proxy.company.com:8080
 
 # 忽略 SSL 证书进行诊断
 npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
+
+# 额外测试 Context7 连通性
+npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --context7
 ```
 
 诊断命令会自动测试：
@@ -110,6 +140,7 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
 2. 连接测试 - 测试是否能通过代理访问互联网
 3. 搜索测试 - 测试 DuckDuckGo 搜索功能
 4. 抓取测试 - 测试网页内容抓取功能
+5. Context7 测试（启用 `--context7` 时）- 测试官方 Context7 工具发现与调用
 
 每个步骤都会显示详细的测试结果和响应时间，帮助快速定位问题。
 
@@ -132,6 +163,22 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
 - `format` (enum, 可选): 返回格式 - markdown / text / html，默认 markdown
 - `timeout` (number, 可选): 超时时间(秒)，最大 120
 
+### resolve-library-id
+
+官方 Context7 工具，解析库名并返回 Context7 兼容的 library ID。
+
+**参数**:
+- `query` (string): 当前要完成的任务或问题
+- `libraryName` (string): 要查找的库名
+
+### query-docs
+
+官方 Context7 工具，根据 library ID 检索最新文档和代码示例。
+
+**参数**:
+- `libraryId` (string): Context7 兼容库 ID，例如 `/vercel/next.js`
+- `query` (string): 具体问题或任务
+
 ## 在 Claude Code 中使用
 
 在 Claude Code 的配置文件中添加 MCP Server：
@@ -145,7 +192,8 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
         "@chenpu17/web-bridge-mcp",
         "--proxy", "system",
         "--ignore-ssl",
-        "--web-search", "duckduckgo"
+        "--web-search", "duckduckgo",
+        "--context7"
       ]
     }
   }
@@ -163,8 +211,28 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
         "@chenpu17/web-bridge-mcp",
         "--proxy", "system",
         "--ignore-ssl",
+        "--context7",
         "--web-search", "bocha",
         "--bocha-api-key", "sk-xxx"
+      ]
+    }
+  }
+}
+```
+
+如果 Context7 需要更高限额，可追加 API Key：
+
+```json
+{
+  "mcpServers": {
+    "proxy-web": {
+      "command": "npx",
+      "args": [
+        "@chenpu17/web-bridge-mcp",
+        "--proxy", "system",
+        "--ignore-ssl",
+        "--context7",
+        "--context7-api-key", "ctx7sk_xxx"
       ]
     }
   }
@@ -206,6 +274,17 @@ npx @chenpu17/web-bridge-mcp --web-search bocha --bocha-api-key sk-xxx
 # 方式2: 环境变量
 export BOCHA_API_KEY=sk-xxx
 npx @chenpu17/web-bridge-mcp --web-search bocha
+```
+
+### 4. Context7 是否必须鉴权？
+
+不是必须。官方远端 MCP 在很多场景下支持匿名基础使用，但限额更低。
+
+如果你在企业内网长期使用，建议配置 `CONTEXT7_API_KEY` 或 `--context7-api-key`，这样更稳定，也更接近官方推荐方式：
+
+```bash
+export CONTEXT7_API_KEY=ctx7sk_xxx
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7
 ```
 
 ## 开发

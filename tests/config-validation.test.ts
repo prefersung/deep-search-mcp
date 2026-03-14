@@ -10,6 +10,10 @@ describe('Config Validation', () => {
         timeout: 30000,
         ignoreSSL: false,
         webSearch: 'duckduckgo',
+        context7: {
+          enabled: false,
+          url: 'https://mcp.context7.com/mcp',
+        },
       }
 
       expect(() => validateConfig(config)).not.toThrow()
@@ -21,6 +25,10 @@ describe('Config Validation', () => {
         timeout: 30000,
         ignoreSSL: false,
         webSearch: 'bocha',
+        context7: {
+          enabled: false,
+          url: 'https://mcp.context7.com/mcp',
+        },
       }
 
       expect(() => validateConfig(config)).toThrow(/Bocha search requires/)
@@ -32,6 +40,10 @@ describe('Config Validation', () => {
         timeout: 500,
         ignoreSSL: false,
         webSearch: 'duckduckgo',
+        context7: {
+          enabled: false,
+          url: 'https://mcp.context7.com/mcp',
+        },
       }
 
       expect(() => validateConfig(config)).toThrow(/timeout must be between/)
@@ -43,9 +55,28 @@ describe('Config Validation', () => {
         timeout: 30000,
         ignoreSSL: false,
         webSearch: 'duckduckgo',
+        context7: {
+          enabled: false,
+          url: 'https://mcp.context7.com/mcp',
+        },
       }
 
       expect(() => validateConfig(config)).toThrow(/Invalid proxy URL/)
+    })
+
+    it('should throw for invalid context7 URL', () => {
+      const config: Config = {
+        proxy: 'none',
+        timeout: 30000,
+        ignoreSSL: false,
+        webSearch: 'duckduckgo',
+        context7: {
+          enabled: true,
+          url: 'invalid-url',
+        },
+      }
+
+      expect(() => validateConfig(config)).toThrow(/Invalid Context7 MCP URL/)
     })
   })
 

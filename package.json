@@ -1,6 +1,6 @@
 {
   "name": "@chenpu17/web-bridge-mcp",
-  "version": "1.0.18",
+  "version": "1.0.19-beta.0",
   "description": "MCP server with proxy support for web search and fetch - Bridge intranet to internet",
   "type": "module",
   "main": "dist/index.js",
@@ -53,6 +53,7 @@
     "https-proxy-agent": "^7.0.0",
     "node-fetch": "^3.3.2",
     "turndown": "^7.2.0",
+    "undici": "^6.24.1",
     "zod": "^3.23.0",
     "zod-to-json-schema": "^3.23.0"
   },

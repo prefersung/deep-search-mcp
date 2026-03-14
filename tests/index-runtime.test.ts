@@ -9,6 +9,9 @@ const mockState = vi.hoisted(() => {
       search: vi.fn(),
     },
     webFetch: vi.fn(),
+    context7ListTools: vi.fn().mockResolvedValue([]),
+    context7CallTool: vi.fn(),
+    context7CanHandleTool: vi.fn().mockReturnValue(false),
   }
 })
 
@@ -53,6 +56,28 @@ vi.mock('../src/tools/web-fetch.js', () => {
   }
 })
 
+vi.mock('../src/context7/bridge.js', () => {
+  class MockContext7Bridge {
+    isEnabled(): boolean {
+      return true
+    }
+
+    canHandleTool(name: string): boolean {
+      return mockState.context7CanHandleTool(name)
+    }
+
+    async listTools() {
+      return mockState.context7ListTools()
+    }
+
+    async callTool(params: unknown) {
+      return mockState.context7CallTool(params)
+    }
+  }
+
+  return { Context7Bridge: MockContext7Bridge }
+})
+
 import { startServer } from '../src/index.js'
 
 describe('MCP Server Runtime', () => {
@@ -68,16 +93,36 @@ describe('MCP Server Runtime', () => {
     mockState.callHandler = undefined
     mockState.searchEngine.search.mockReset()
     mockState.webFetch.mockReset()
+    mockState.context7ListTools.mockReset().mockResolvedValue([])
+    mockState.context7CallTool.mockReset()
+    mockState.context7CanHandleTool.mockReset().mockReturnValue(false)
   })
 
   it('should register tools and expose schemas', async () => {
     await startServer(config)
 
     expect(mockState.listHandler).toBeDefined()
-    const listResult = mockState.listHandler!() as { tools: Array<{ name: string; description: string }> }
+    const listResult = (await mockState.listHandler!()) as {
+      tools: Array<{ name: string; description: string }>
+    }
     expect(listResult.tools.map((t) => t.name)).toEqual(['web_search', 'web_fetch'])
     expect(listResult.tools[0]?.description).toBe('mock-search-desc')
     expect(listResult.tools[1]?.description).toBe('mock-web-fetch-desc')
+  })
+
+  it('should merge Context7 tools into tool listing', async () => {
+    mockState.context7ListTools.mockResolvedValue([
+      {
+        name: 'resolve-library-id',
+        description: 'mock-context7-tool',
+        inputSchema: { type: 'object' },
+      },
+    ])
+
+    await startServer(config)
+    const listResult = (await mockState.listHandler!()) as { tools: Array<{ name: string }> }
+
+    expect(listResult.tools.map((tool) => tool.name)).toContain('resolve-library-id')
   })
 
   it('should route web_search calls to search engine', async () => {
@@ -145,5 +190,27 @@ describe('MCP Server Runtime', () => {
 
     expect(response.isError).toBe(true)
     expect(response.content[0]?.text).toContain('Unknown tool')
+  })
+
+  it('should forward Context7 tool calls', async () => {
+    mockState.context7CanHandleTool.mockReturnValue(true)
+    mockState.context7CallTool.mockResolvedValue({
+      content: [{ type: 'text', text: 'context7 result' }],
+    })
+
+    await startServer(config)
+    const response = (await mockState.callHandler!({
+      params: {
+        name: 'resolve-library-id',
+        arguments: { query: 'next', libraryName: 'next.js' },
+      },
+    })) as { content: Array<{ text: string }>; isError?: boolean }
+
+    expect(mockState.context7CallTool).toHaveBeenCalledWith({
+      name: 'resolve-library-id',
+      arguments: { query: 'next', libraryName: 'next.js' },
+    })
+    expect(response.isError).toBeUndefined()
+    expect(response.content[0]?.text).toBe('context7 result')
   })
 })
