@@ -201,7 +201,9 @@ export class BochaSearch extends BaseSearchEngine {
     }
 
     // 匹配 Description: xxx 格式
-    const descMatch = block.match(/Description:\s*([\s\S]+?)(?=\n(?:Title|URL|Description|Published|Site):|$)/i)
+    const descMatch = block.match(
+      /Description:\s*([\s\S]+?)(?=\n(?:Title|URL|Description|Published|Site):|$)/i
+    )
     if (descMatch) {
       snippet = descMatch[1].trim()
     }

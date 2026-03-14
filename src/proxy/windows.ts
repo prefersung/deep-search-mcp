@@ -67,7 +67,10 @@ export async function getWindowsProxySettings(): Promise<WindowsProxySettings> {
     return settings
   } catch (error) {
     // Registry query failed
-    console.error('[Proxy] Windows registry query failed:', error instanceof Error ? error.message : error)
+    console.error(
+      '[Proxy] Windows registry query failed:',
+      error instanceof Error ? error.message : error
+    )
     return { enabled: false }
   }
 }

@@ -144,7 +144,7 @@ export class Context7Bridge {
     const transport = new StreamableHTTPClientTransport(new URL(this.url), {
       fetch: this.createFetch(),
     })
-    transport.onerror = (error) => {
+    transport.onerror = error => {
       console.error(
         `[Context7] Remote transport error: ${error instanceof Error ? error.message : String(error)}`
       )

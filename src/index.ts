@@ -69,7 +69,7 @@ export async function startServer(config: Config): Promise<void> {
       },
     ]
 
-    return context7Bridge.listTools().then((context7Tools) => ({
+    return context7Bridge.listTools().then(context7Tools => ({
       tools: [...tools, ...context7Tools],
     }))
   })

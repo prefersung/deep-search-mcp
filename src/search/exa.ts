@@ -178,7 +178,9 @@ export class ExaSearch extends BaseSearchEngine {
     }
 
     // 尝试匹配 Text: xxx 或 Content: xxx 格式
-    const textMatch = block.match(/(?:Text|Content):\s*([\s\S]+?)(?=\n(?:Title|URL|Author|Published|Text|Content):|$)/i)
+    const textMatch = block.match(
+      /(?:Text|Content):\s*([\s\S]+?)(?=\n(?:Title|URL|Author|Published|Text|Content):|$)/i
+    )
     if (textMatch) {
       snippet = textMatch[1].trim()
     }

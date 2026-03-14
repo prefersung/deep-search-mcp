@@ -177,7 +177,9 @@ export class WebFetch {
 
     // SSRF protection: check for private addresses
     if (isPrivateUrl(url)) {
-      throw new Error('Access to private addresses, local addresses or sensitive ports is not allowed')
+      throw new Error(
+        'Access to private addresses, local addresses or sensitive ports is not allowed'
+      )
     }
 
     // SSRF protection: check DNS resolution (prevent DNS rebinding)
@@ -351,7 +353,10 @@ export class WebFetch {
       return text.replace(/\s+/g, ' ').trim()
     } catch (error) {
       // Fallback to basic regex if cheerio fails
-      return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      return html
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
     }
   }
 

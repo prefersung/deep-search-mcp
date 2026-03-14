@@ -49,15 +49,16 @@ export function loadConfigFromEnv(
 ): Config {
   const partialContext7: Partial<Context7Settings> = partial.context7 ?? {}
   const context7ApiKey = partialContext7.apiKey || process.env.CONTEXT7_API_KEY
-  const context7Url = partialContext7.url || process.env.CONTEXT7_MCP_URL || DEFAULT_CONTEXT7_CONFIG.url
+  const context7Url =
+    partialContext7.url || process.env.CONTEXT7_MCP_URL || DEFAULT_CONTEXT7_CONFIG.url
   const context7Enabled =
     partialContext7.enabled ??
     (process.env.ENABLE_CONTEXT7 === 'true' ||
       Boolean(
         partialContext7.apiKey ||
-          partialContext7.url ||
-          process.env.CONTEXT7_API_KEY ||
-          process.env.CONTEXT7_MCP_URL
+        partialContext7.url ||
+        process.env.CONTEXT7_API_KEY ||
+        process.env.CONTEXT7_MCP_URL
       ))
 
   return {

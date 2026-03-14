@@ -32,7 +32,7 @@ interface CliOptions {
 }
 
 function hasCliFlag(...flags: string[]): boolean {
-  return flags.some((flag) => process.argv.includes(flag))
+  return flags.some(flag => process.argv.includes(flag))
 }
 
 function getCliOptionValue(flags: string[], fallback?: string): string | undefined {
@@ -68,7 +68,9 @@ program
   .action(async (options: CliOptions) => {
     try {
       const context7Enabled =
-        options.context7 || Boolean(options.context7ApiKey) || process.argv.includes('--context7-url')
+        options.context7 ||
+        Boolean(options.context7ApiKey) ||
+        process.argv.includes('--context7-url')
 
       const config: Config = loadConfigFromEnv({
         proxy: options.proxy,
@@ -109,14 +111,18 @@ program
 
       if (config.context7?.enabled) {
         console.error(`Context7 URL: ${config.context7.url}`)
-        console.error(`Context7 Auth: ${config.context7.apiKey ? 'API Key configured' : 'Anonymous'}`)
+        console.error(
+          `Context7 Auth: ${config.context7.apiKey ? 'API Key configured' : 'Anonymous'}`
+        )
       }
 
       // Security warning
       if (config.ignoreSSL) {
         console.error('')
         console.error('⚠️  WARNING: SSL certificate verification is disabled!')
-        console.error('   This may lead to man-in-the-middle attack risks. Use only in trusted networks.')
+        console.error(
+          '   This may lead to man-in-the-middle attack risks. Use only in trusted networks.'
+        )
       }
 
       if (options.bochaApiKey) {
@@ -192,11 +198,7 @@ program
   .option('--ignore-ssl', 'Ignore SSL certificate verification', false)
   .option('--context7', 'Test Context7 connectivity', false)
   .option('--context7-api-key <key>', 'Context7 API Key (optional)')
-  .option(
-    '--context7-url <url>',
-    'Context7 MCP URL',
-    DEFAULT_CONTEXT7_CONFIG.url
-  )
+  .option('--context7-url <url>', 'Context7 MCP URL', DEFAULT_CONTEXT7_CONFIG.url)
   .action(
     async (options: {
       proxy: string
@@ -337,7 +339,7 @@ program
       console.log(`[4/${totalSteps}] Testing web fetch...`)
       try {
         const { WebFetch } = await import('./tools/web-fetch.js')
-          const webFetch = new WebFetch({
+        const webFetch = new WebFetch({
           proxy: diagnoseOptions.proxy,
           timeout: 30000,
           ignoreSSL: diagnoseOptions.ignoreSsl,
