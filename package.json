@@ -1,6 +1,6 @@
 {
   "name": "@chenpu17/web-bridge-mcp",
-  "version": "1.0.19-beta.0",
+  "version": "1.0.19-beta.1",
   "description": "MCP server with proxy support for web search and fetch - Bridge intranet to internet",
   "type": "module",
   "main": "dist/index.js",

@@ -16,6 +16,7 @@
 - **网页抓取**: 支持 Markdown、纯文本、HTML 格式输出
 - **官方 Context7 透传**: 直连 `https://mcp.context7.com/mcp`，暴露官方 `resolve-library-id` / `query-docs` 工具
 - **Context7 可选鉴权**: 支持 `CONTEXT7_API_KEY`，不配置也可匿名基础使用
+- **Context7 容错更稳**: 远端工具发现失败时保留内置 fallback 元数据，临时网络抖动时自动重连重试一次
 - **npx 运行**: 无需安装，一条命令即可使用
 
 ## 快速开始
@@ -143,6 +144,8 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --context7
 5. Context7 测试（启用 `--context7` 时）- 测试官方 Context7 工具发现与调用
 
 每个步骤都会显示详细的测试结果和响应时间，帮助快速定位问题。
+
+如果你准备发布新版本，建议在本机或目标网络环境里至少手动跑一次 `diagnose --context7`，确认代理、匿名访问或 API Key 配置都正常。
 
 ## MCP 工具
 

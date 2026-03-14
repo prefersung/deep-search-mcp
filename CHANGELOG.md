@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.19-beta.1] - 2026-03-14
+
+### Changed
+
+- **Context7 Bridge Resilience**: Added built-in fallback tool metadata for `resolve-library-id` and `query-docs` when remote discovery temporarily fails
+- **Context7 Logging**: Replaced direct bridge error output with an injectable logger interface for cleaner diagnostics and future extensibility
+- **Server Lifecycle**: Added graceful runtime shutdown so the Context7 bridge transport and dispatcher are closed on process exit
+
+### Fixed
+
+- **Context7 Tool Discovery**: `listTools()` now retries through the reconnect path before falling back, improving resilience during transient remote errors
+- **Context7 Tests**: Added coverage for disabled mode, fallback behavior, reconnect handling, and bridge cleanup on runtime shutdown
+
 ## [1.0.19-beta.0] - 2026-03-14
 
 ### Added
