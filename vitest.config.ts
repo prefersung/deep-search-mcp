@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: ['./tests/setup.ts'],
     testTimeout: 120000, // E2E 测试需要更长的超时时间
     hookTimeout: 60000,
     coverage: {
