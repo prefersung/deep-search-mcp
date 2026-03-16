@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.19-beta.3] - 2026-03-16
+
+### Changed
+
+- **Context7 Tool Routing Hints**: Strengthened the `resolve-library-id` and `query-docs` tool descriptions so coding agents more clearly prefer official Context7 for library, framework, SDK, API, installation, configuration, migration, and code example questions
+- **Tool Prioritization Guidance**: Added explicit hints to `web_search` and `web_fetch` descriptions telling agents to prefer Context7 before generic web lookup for software documentation tasks
+
 ## [1.0.19-beta.2] - 2026-03-16
 
 ### Changed
