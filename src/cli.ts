@@ -420,7 +420,9 @@ program
             console.log(`✓ Context7 tool discovery successful`)
           } else {
             console.log(`⚠ Context7 tool discovery fell back to built-in metadata`)
-            console.log('  Remote listTools response was unavailable or incompatible with MCP streamable HTTP')
+            console.log(
+              '  Remote listTools response was unavailable or incompatible with MCP streamable HTTP'
+            )
           }
           console.log(`  Found ${tools.length} tools`)
 

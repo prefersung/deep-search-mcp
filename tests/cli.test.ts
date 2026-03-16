@@ -176,9 +176,9 @@ describe('CLI', () => {
       status: 200,
       json: async () => ({ origin: '1.2.3.4' }),
     })
-    const searchMock = vi.fn().mockResolvedValue([
-      { title: 'T', url: 'https://example.com', snippet: 'S' },
-    ])
+    const searchMock = vi
+      .fn()
+      .mockResolvedValue([{ title: 'T', url: 'https://example.com', snippet: 'S' }])
     const webFetchMock = vi.fn().mockResolvedValue({
       title: 'Example Domain',
       content: 'example',
@@ -210,12 +210,10 @@ describe('CLI', () => {
     }))
     vi.doMock('../src/context7/bridge.js', () => ({
       Context7Bridge: class {
-        listTools = vi
-          .fn()
-          .mockResolvedValue([
-            { name: 'resolve-library-id', inputSchema: { type: 'object' } },
-            { name: 'query-docs', inputSchema: { type: 'object' } },
-          ])
+        listTools = vi.fn().mockResolvedValue([
+          { name: 'resolve-library-id', inputSchema: { type: 'object' } },
+          { name: 'query-docs', inputSchema: { type: 'object' } },
+        ])
         getLastToolDiscoverySource = vi.fn().mockReturnValue('remote')
         callTool = vi.fn().mockResolvedValue({
           content: [{ type: 'text', text: 'ok' }],
@@ -273,7 +271,9 @@ describe('CLI', () => {
     }))
     vi.doMock('../src/search/duckduckgo.js', () => ({
       DuckDuckGoSearch: class {
-        search = vi.fn().mockResolvedValue([{ title: 'T', url: 'https://example.com', snippet: 'S' }])
+        search = vi
+          .fn()
+          .mockResolvedValue([{ title: 'T', url: 'https://example.com', snippet: 'S' }])
       },
     }))
     vi.doMock('../src/tools/web-fetch.js', () => ({
@@ -338,7 +338,9 @@ describe('CLI', () => {
     }))
     vi.doMock('../src/search/duckduckgo.js', () => ({
       DuckDuckGoSearch: class {
-        search = vi.fn().mockResolvedValue([{ title: 'T', url: 'https://example.com', snippet: 'S' }])
+        search = vi
+          .fn()
+          .mockResolvedValue([{ title: 'T', url: 'https://example.com', snippet: 'S' }])
       },
     }))
     vi.doMock('../src/tools/web-fetch.js', () => ({
