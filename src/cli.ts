@@ -229,7 +229,7 @@ program
   .description('Diagnose proxy connection and test internet access')
   .option('-p, --proxy <proxy>', 'Proxy setting: system | none | http://host:port', 'system')
   .option('--ignore-ssl', 'Ignore SSL certificate verification', false)
-  .option('--context7', 'Test Context7 connectivity', false)
+  .option('--no-context7', 'Skip Context7 connectivity test')
   .option('--context7-api-key <key>', 'Context7 API Key (optional)')
   .option('--context7-url <url>', 'Context7 MCP URL', DEFAULT_CONTEXT7_CONFIG.url)
   .action(
@@ -243,7 +243,7 @@ program
       const diagnoseOptions = {
         proxy: getCliOptionValue(['--proxy', '-p'], options.proxy) || options.proxy,
         ignoreSsl: options.ignoreSsl || hasCliFlag('--ignore-ssl'),
-        context7: options.context7 || hasCliFlag('--context7'),
+        context7: options.context7 ?? !hasCliFlag('--no-context7'),
         context7ApiKey: getCliOptionValue(['--context7-api-key'], options.context7ApiKey),
         context7Url:
           getCliOptionValue(['--context7-url'], options.context7Url) || options.context7Url,
@@ -414,7 +414,14 @@ program
           })
 
           const tools = await context7Bridge.listTools()
-          console.log(`✓ Context7 tool discovery successful`)
+          const discoverySource = context7Bridge.getLastToolDiscoverySource()
+
+          if (discoverySource === 'remote') {
+            console.log(`✓ Context7 tool discovery successful`)
+          } else {
+            console.log(`⚠ Context7 tool discovery fell back to built-in metadata`)
+            console.log('  Remote listTools response was unavailable or incompatible with MCP streamable HTTP')
+          }
           console.log(`  Found ${tools.length} tools`)
 
           const startTime = Date.now()

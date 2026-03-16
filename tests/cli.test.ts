@@ -208,6 +208,20 @@ describe('CLI', () => {
         fetch = webFetchMock
       },
     }))
+    vi.doMock('../src/context7/bridge.js', () => ({
+      Context7Bridge: class {
+        listTools = vi
+          .fn()
+          .mockResolvedValue([
+            { name: 'resolve-library-id', inputSchema: { type: 'object' } },
+            { name: 'query-docs', inputSchema: { type: 'object' } },
+          ])
+        getLastToolDiscoverySource = vi.fn().mockReturnValue('remote')
+        callTool = vi.fn().mockResolvedValue({
+          content: [{ type: 'text', text: 'ok' }],
+        })
+      },
+    }))
 
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     process.argv = ['node', 'cli.js', 'diagnose', '--proxy', 'system']
@@ -222,11 +236,12 @@ describe('CLI', () => {
     expect(webFetchMock).toHaveBeenCalledWith({ url: 'https://www.163.com', format: 'text' })
 
     const output = logSpy.mock.calls.flat().join('\n')
+    expect(output).toContain('Testing Context7')
     expect(output).toContain('Diagnostics complete!')
     logSpy.mockRestore()
   })
 
-  it('should run diagnose Context7 check when --context7 is passed', async () => {
+  it('should run diagnose Context7 check by default', async () => {
     const listToolsMock = vi.fn().mockResolvedValue([
       { name: 'resolve-library-id', inputSchema: { type: 'object' } },
       { name: 'query-docs', inputSchema: { type: 'object' } },
@@ -274,18 +289,84 @@ describe('CLI', () => {
     vi.doMock('../src/context7/bridge.js', () => ({
       Context7Bridge: class {
         listTools = listToolsMock
+        getLastToolDiscoverySource = vi.fn().mockReturnValue('remote')
         callTool = callToolMock
       },
     }))
 
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    process.argv = ['node', 'cli.js', 'diagnose', '--proxy', 'none', '--context7']
+    process.argv = ['node', 'cli.js', 'diagnose', '--proxy', 'none']
 
     await import('../src/cli.js')
     await vi.waitFor(() => expect(callToolMock).toHaveBeenCalledTimes(1))
 
     const output = logSpy.mock.calls.flat().join('\n')
     expect(output).toContain('Testing Context7')
+    expect(output).toContain('Context7 tool call successful')
+    logSpy.mockRestore()
+  })
+
+  it('should show a warning when Context7 discovery falls back to built-in metadata', async () => {
+    const listToolsMock = vi.fn().mockResolvedValue([
+      { name: 'resolve-library-id', inputSchema: { type: 'object' } },
+      { name: 'query-docs', inputSchema: { type: 'object' } },
+    ])
+    const callToolMock = vi.fn().mockResolvedValue({
+      content: [{ type: 'text', text: 'ok' }],
+    })
+
+    vi.doMock('../src/index.js', () => ({ startServer: vi.fn() }))
+    vi.doMock('../src/config.js', () => ({
+      DEFAULT_CONTEXT7_CONFIG: { enabled: false, url: 'https://mcp.context7.com/mcp' },
+      loadConfigFromEnv: vi.fn(),
+      validateConfig: vi.fn(),
+    }))
+    vi.doMock('../src/proxy/windows.js', () => ({
+      detectSystemProxy: vi.fn().mockResolvedValue(null),
+      getWindowsProxySettings: vi.fn().mockResolvedValue({ enabled: false }),
+    }))
+    vi.doMock('../src/proxy/index.js', () => ({
+      resolveProxyUrl: vi.fn().mockResolvedValue(null),
+      getProxyAgent: vi.fn().mockResolvedValue(undefined),
+    }))
+    vi.doMock('node-fetch', () => ({
+      default: vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ origin: '1.2.3.4' }),
+      }),
+    }))
+    vi.doMock('../src/search/duckduckgo.js', () => ({
+      DuckDuckGoSearch: class {
+        search = vi.fn().mockResolvedValue([{ title: 'T', url: 'https://example.com', snippet: 'S' }])
+      },
+    }))
+    vi.doMock('../src/tools/web-fetch.js', () => ({
+      WebFetch: class {
+        fetch = vi.fn().mockResolvedValue({
+          title: 'Example Domain',
+          content: 'example',
+          url: 'https://example.com',
+          contentType: 'text/html',
+        })
+      },
+    }))
+    vi.doMock('../src/context7/bridge.js', () => ({
+      Context7Bridge: class {
+        listTools = listToolsMock
+        getLastToolDiscoverySource = vi.fn().mockReturnValue('fallback')
+        callTool = callToolMock
+      },
+    }))
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    process.argv = ['node', 'cli.js', 'diagnose', '--proxy', 'none']
+
+    await import('../src/cli.js')
+    await vi.waitFor(() => expect(callToolMock).toHaveBeenCalledTimes(1))
+
+    const output = logSpy.mock.calls.flat().join('\n')
+    expect(output).toContain('fell back to built-in metadata')
     expect(output).toContain('Context7 tool call successful')
     logSpy.mockRestore()
   })

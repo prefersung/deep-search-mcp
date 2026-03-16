@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.19-beta.2] - 2026-03-16
+
+### Changed
+
+- **Diagnose Defaults**: `diagnose` now includes the Context7 connectivity check by default, with `--no-context7` available to skip it when needed
+- **Diagnose Output**: Context7 discovery now reports a warning when it falls back to built-in tool metadata instead of claiming full remote discovery success
+
+### Fixed
+
+- **Context7 Diagnostics on Some Proxies**: Improved operator-facing output for environments where remote `listTools()` returns an incompatible content type but direct Context7 tool calls still succeed
+- **README Guidance**: Updated diagnose examples and expectations to match the new default Context7 behavior
+
 ## [1.0.19-beta.1] - 2026-03-14
 
 ### Changed

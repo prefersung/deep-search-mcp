@@ -132,8 +132,11 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy http://proxy.company.com:8080
 # 忽略 SSL 证书进行诊断
 npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
 
-# 额外测试 Context7 连通性
-npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --context7
+# 默认会额外测试 Context7 连通性
+npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
+
+# 如需跳过 Context7 测试
+npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --no-context7
 ```
 
 诊断命令会自动测试：
@@ -141,11 +144,11 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --context7
 2. 连接测试 - 测试是否能通过代理访问互联网
 3. 搜索测试 - 测试 DuckDuckGo 搜索功能
 4. 抓取测试 - 测试网页内容抓取功能
-5. Context7 测试（启用 `--context7` 时）- 测试官方 Context7 工具发现与调用
+5. Context7 测试（默认启用）- 测试官方 Context7 工具发现与调用
 
 每个步骤都会显示详细的测试结果和响应时间，帮助快速定位问题。
 
-如果你准备发布新版本，建议在本机或目标网络环境里至少手动跑一次 `diagnose --context7`，确认代理、匿名访问或 API Key 配置都正常。
+如果你准备发布新版本，建议在本机或目标网络环境里至少手动跑一次 `diagnose`，确认代理、匿名访问或 API Key 配置都正常。
 
 ## MCP 工具
 

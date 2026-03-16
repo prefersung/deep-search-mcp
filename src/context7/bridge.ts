@@ -12,6 +12,8 @@ export interface Context7Logger {
   error(message: string): void
 }
 
+export type Context7ToolDiscoverySource = 'remote' | 'fallback'
+
 const FALLBACK_CONTEXT7_TOOLS: Tool[] = [
   {
     name: 'resolve-library-id',
@@ -123,6 +125,7 @@ export class Context7Bridge {
   private cachedTools: Tool[] = cloneTools(FALLBACK_CONTEXT7_TOOLS)
   private readonly knownToolNames = new Set(FALLBACK_CONTEXT7_TOOL_NAMES)
   private dispatcher: Dispatcher | null = null
+  private lastToolDiscoverySource: Context7ToolDiscoverySource = 'fallback'
 
   constructor(config: Config, logger: Context7Logger = console) {
     const context7 = config.context7 ?? DEFAULT_CONTEXT7_CONFIG
@@ -144,6 +147,10 @@ export class Context7Bridge {
     return this.enabled && this.knownToolNames.has(name)
   }
 
+  getLastToolDiscoverySource(): Context7ToolDiscoverySource {
+    return this.lastToolDiscoverySource
+  }
+
   async listTools(): Promise<Tool[]> {
     if (!this.enabled) {
       return []
@@ -156,6 +163,7 @@ export class Context7Bridge {
         return this.cachedTools
       })
     } catch (error) {
+      this.lastToolDiscoverySource = 'fallback'
       this.logError('Failed to list remote tools', error)
       return this.cachedTools
     }
@@ -232,6 +240,7 @@ export class Context7Bridge {
 
   private cacheTools(tools: Tool[]): void {
     this.cachedTools = mergeTools(tools)
+    this.lastToolDiscoverySource = 'remote'
     this.knownToolNames.clear()
 
     for (const tool of this.cachedTools) {
