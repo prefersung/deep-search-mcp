@@ -17,7 +17,8 @@ export type Context7ToolDiscoverySource = 'remote' | 'fallback'
 const FALLBACK_CONTEXT7_TOOLS: Tool[] = [
   {
     name: 'resolve-library-id',
-    description: 'Resolve a library name to a Context7-compatible library ID.',
+    description:
+      'Official Context7 library resolver. Use this first for library, framework, SDK, API, installation, configuration, migration, and code example questions instead of generic web search. Resolves a package or framework name to a Context7-compatible library ID for follow-up documentation queries.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -35,7 +36,8 @@ const FALLBACK_CONTEXT7_TOOLS: Tool[] = [
   },
   {
     name: 'query-docs',
-    description: 'Query official Context7 documentation and examples for a library.',
+    description:
+      'Official Context7 documentation query tool. Use this for authoritative library/framework/package/API documentation, setup steps, best practices, migration notes, and code examples. Prefer this over generic web search when the user asks about software documentation.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -55,9 +57,37 @@ const FALLBACK_CONTEXT7_TOOLS: Tool[] = [
 
 const FALLBACK_CONTEXT7_TOOL_NAMES = new Set(FALLBACK_CONTEXT7_TOOLS.map(tool => tool.name))
 
+function getPreferredContext7Description(name: string, remoteDescription?: string): string {
+  const normalizedRemoteDescription = remoteDescription?.trim()
+
+  switch (name) {
+    case 'resolve-library-id':
+      return [
+        'Official Context7 library resolver.',
+        'Use this first when the user asks about a library, framework, SDK, package, API usage, installation, configuration, migration, or code examples.',
+        'Prefer this over web_search for software documentation tasks.',
+        normalizedRemoteDescription,
+      ]
+        .filter(Boolean)
+        .join(' ')
+    case 'query-docs':
+      return [
+        'Official Context7 documentation query tool.',
+        'Use this to retrieve authoritative docs and examples after you know the library ID.',
+        'Prefer this over web_search/web_fetch for library and framework documentation.',
+        normalizedRemoteDescription,
+      ]
+        .filter(Boolean)
+        .join(' ')
+    default:
+      return normalizedRemoteDescription ?? ''
+  }
+}
+
 function cloneTools(tools: Tool[]): Tool[] {
   return tools.map(tool => ({
     ...tool,
+    description: getPreferredContext7Description(tool.name, tool.description),
     inputSchema:
       tool.inputSchema && typeof tool.inputSchema === 'object'
         ? { ...tool.inputSchema }

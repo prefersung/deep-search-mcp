@@ -140,6 +140,8 @@ describe('Context7Bridge', () => {
     expect(tools).toHaveLength(2)
     expect(bridge.canHandleTool('resolve-library-id')).toBe(true)
     expect(bridge.canHandleTool('query-docs')).toBe(true)
+    expect(tools[0]?.description).toContain('Official Context7 library resolver')
+    expect(tools[1]?.description).toContain('Official Context7 documentation query tool')
     expect(mockState.lastTransport?.url.href).toBe('https://mcp.context7.com/mcp')
 
     const transportFetch = mockState.lastTransport?.opts?.fetch
@@ -187,6 +189,8 @@ describe('Context7Bridge', () => {
 
     expect(mockState.clientListTools).toHaveBeenCalledTimes(2)
     expect(tools.map(tool => tool.name)).toEqual(['resolve-library-id', 'query-docs'])
+    expect(tools[0]?.description).toContain('Prefer this over web_search')
+    expect(tools[1]?.description).toContain('Prefer this over web_search/web_fetch')
     expect(tools[0]?.inputSchema).toMatchObject({
       type: 'object',
       required: ['query', 'libraryName'],

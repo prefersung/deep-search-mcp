@@ -388,6 +388,7 @@ export function getWebFetchDescription(): string {
 
 Usage notes:
   - Use web_search first to find URLs, then use this tool to fetch their content
+  - If the user is asking for library/framework/package/API documentation, prefer Context7 tools before web_fetch
   - The URL must be a fully-formed valid URL
   - HTTP URLs will be automatically upgraded to HTTPS
   - Format options: "markdown" (default), "text", or "html"

@@ -49,6 +49,7 @@ export function getSearchEngineDescription(engine: SearchEngine): string {
 
 Usage notes:
 - Use web_search to find information; use web_fetch to retrieve specific URLs
+- If the question is about library/framework/package/API documentation, prefer Context7 tools first
 - Free to use, no API key required
 - Supports both English and Chinese queries
 - Best for general web searches and finding recent information`,
@@ -61,6 +62,7 @@ Usage notes:
 
 Usage notes:
 - Use web_search to find information; use web_fetch to retrieve specific URLs
+- If the question is about library/framework/package/API documentation, prefer Context7 tools first
 - AI-powered search optimization for better relevance
 - Best for technical research and academic queries
 - Excellent for AI-related content searches`,
@@ -73,6 +75,7 @@ Usage notes:
 
 Usage notes:
 - Use web_search to find information; use web_fetch to retrieve specific URLs
+- If the question is about library/framework/package/API documentation, prefer Context7 tools first
 - Best for Chinese content searches
 - Optimized for China-localized information
 - Supports real-time web crawling`,

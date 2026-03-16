@@ -9,6 +9,7 @@ describe('Tool Descriptions', () => {
       expect(desc).toBeDefined()
       expect(typeof desc).toBe('string')
       expect(desc.length).toBeGreaterThan(0)
+      expect(desc).toContain('prefer Context7 tools first')
     })
 
     it('should return description for exa', () => {
@@ -32,6 +33,7 @@ describe('Tool Descriptions', () => {
       expect(desc).toBeDefined()
       expect(typeof desc).toBe('string')
       expect(desc).toContain('URL')
+      expect(desc).toContain('prefer Context7 tools')
     })
   })
 })
