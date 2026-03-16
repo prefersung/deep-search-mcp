@@ -29,7 +29,7 @@ export interface Config {
 }
 
 export const DEFAULT_CONTEXT7_CONFIG: Context7Settings = {
-  enabled: false,
+  enabled: true,
   url: 'https://mcp.context7.com/mcp',
 }
 
@@ -53,13 +53,9 @@ export function loadConfigFromEnv(
     partialContext7.url || process.env.CONTEXT7_MCP_URL || DEFAULT_CONTEXT7_CONFIG.url
   const context7Enabled =
     partialContext7.enabled ??
-    (process.env.ENABLE_CONTEXT7 === 'true' ||
-      Boolean(
-        partialContext7.apiKey ||
-        partialContext7.url ||
-        process.env.CONTEXT7_API_KEY ||
-        process.env.CONTEXT7_MCP_URL
-      ))
+    (process.env.ENABLE_CONTEXT7 !== undefined
+      ? process.env.ENABLE_CONTEXT7 === 'true'
+      : DEFAULT_CONTEXT7_CONFIG.enabled)
 
   return {
     proxy:

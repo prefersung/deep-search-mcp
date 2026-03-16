@@ -94,16 +94,11 @@ program
   .option('--bocha-api-key <key>', '博查 AI API Key (建议使用环境变量 BOCHA_API_KEY)')
   .option('-t, --timeout <ms>', '请求超时时间(毫秒)', '30000')
   .option('--ignore-ssl', '忽略 SSL 证书校验 (解决代理证书问题)', false)
-  .option('--context7', '启用官方 Context7 MCP 透传', false)
+  .option('--no-context7', '禁用官方 Context7 MCP 透传（默认启用）')
   .option('--context7-api-key <key>', 'Context7 API Key (可选，提高限额)')
   .option('--context7-url <url>', 'Context7 MCP URL')
   .action(async (options: CliOptions) => {
     try {
-      const context7Enabled =
-        options.context7 ||
-        Boolean(options.context7ApiKey) ||
-        process.argv.includes('--context7-url')
-
       const config: Config = loadConfigFromEnv({
         proxy: options.proxy,
         webSearch: options.webSearch as SearchEngine,
@@ -111,7 +106,7 @@ program
         timeout: parseInt(options.timeout, 10),
         ignoreSSL: options.ignoreSsl,
         context7: {
-          enabled: context7Enabled,
+          enabled: options.context7,
           apiKey: options.context7ApiKey,
           url: options.context7Url,
         },

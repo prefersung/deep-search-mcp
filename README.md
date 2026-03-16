@@ -15,6 +15,7 @@
 - **多种搜索引擎**: DuckDuckGo（免费）、Exa AI、博查 AI
 - **网页抓取**: 支持 Markdown、纯文本、HTML 格式输出
 - **官方 Context7 透传**: 直连 `https://mcp.context7.com/mcp`，暴露官方 `resolve-library-id` / `query-docs` 工具
+- **Context7 默认开启**: 启动后默认同时暴露搜索、抓取、Context7 文档工具，无需额外参数
 - **Context7 可选鉴权**: 支持 `CONTEXT7_API_KEY`，不配置也可匿名基础使用
 - **Context7 容错更稳**: 远端工具发现失败时保留内置 fallback 元数据，临时网络抖动时自动重连重试一次
 - **npx 运行**: 无需安装，一条命令即可使用
@@ -24,9 +25,6 @@
 ```bash
 # 使用 npx 直接运行（推荐）
 npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
-
-# 启用官方 Context7
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7
 
 # 或全局安装
 npm install -g @chenpu17/web-bridge-mcp
@@ -54,14 +52,17 @@ npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
 ### 启用 Context7
 
 ```bash
-# 启用官方 Context7 MCP 透传
-npx @chenpu17/web-bridge-mcp --context7
+# Context7 默认已启用
+npx @chenpu17/web-bridge-mcp
 
 # 内网推荐：系统代理 + 忽略 SSL + Context7
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
 
 # 配置 Context7 API Key（可选，提高限额）
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7 --context7-api-key ctx7sk_xxx
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7-api-key ctx7sk_xxx
+
+# 如需显式关闭 Context7
+npx @chenpu17/web-bridge-mcp --no-context7
 ```
 
 ### 搜索引擎配置
@@ -81,7 +82,7 @@ npx @chenpu17/web-bridge-mcp --web-search bocha --bocha-api-key sk-xxx
 
 ```bash
 # 使用系统代理 + 忽略 SSL + DuckDuckGo + 官方 Context7
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
 
 # 使用系统代理 + 忽略 SSL + 博查搜索 + 官方 Context7
 npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bocha-api-key sk-xxx
@@ -95,7 +96,7 @@ npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bo
 | `BOCHA_API_KEY` | 博查 AI 的 Bearer Token |
 | `CONTEXT7_API_KEY` | Context7 API Key（可选） |
 | `CONTEXT7_MCP_URL` | Context7 MCP URL，默认 `https://mcp.context7.com/mcp` |
-| `ENABLE_CONTEXT7` | 启用 Context7（设置为 `true`） |
+| `ENABLE_CONTEXT7` | 是否启用 Context7；默认启用，设置为 `false` 可关闭 |
 | `IGNORE_SSL` | 忽略 SSL 证书校验 (设置为 `true`) |
 | `NODE_TLS_REJECT_UNAUTHORIZED` | 设置为 `0` 也可忽略 SSL |
 
@@ -108,7 +109,7 @@ npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bo
 | `--bocha-api-key <key>` | 博查 AI API Key | - |
 | `-t, --timeout <ms>` | 请求超时时间(毫秒) | 30000 |
 | `--ignore-ssl` | 忽略 SSL 证书校验 | false |
-| `--context7` | 启用官方 Context7 MCP 透传 | false |
+| `--no-context7` | 禁用官方 Context7 MCP 透传 | 默认启用 |
 | `--context7-api-key <key>` | Context7 API Key（可选） | - |
 | `--context7-url <url>` | Context7 MCP URL | `https://mcp.context7.com/mcp` |
 
@@ -198,8 +199,7 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --no-context7
         "@chenpu17/web-bridge-mcp",
         "--proxy", "system",
         "--ignore-ssl",
-        "--web-search", "duckduckgo",
-        "--context7"
+        "--web-search", "duckduckgo"
       ]
     }
   }
@@ -217,7 +217,6 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --no-context7
         "@chenpu17/web-bridge-mcp",
         "--proxy", "system",
         "--ignore-ssl",
-        "--context7",
         "--web-search", "bocha",
         "--bocha-api-key", "sk-xxx"
       ]
@@ -237,7 +236,6 @@ npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --no-context7
         "@chenpu17/web-bridge-mcp",
         "--proxy", "system",
         "--ignore-ssl",
-        "--context7",
         "--context7-api-key", "ctx7sk_xxx"
       ]
     }
@@ -290,7 +288,7 @@ npx @chenpu17/web-bridge-mcp --web-search bocha
 
 ```bash
 export CONTEXT7_API_KEY=ctx7sk_xxx
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7
+npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
 ```
 
 ## 开发

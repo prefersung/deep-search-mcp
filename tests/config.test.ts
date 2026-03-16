@@ -52,6 +52,21 @@ describe('Config', () => {
         apiKey: 'ctx7sk_test',
       })
     })
+
+    it('should allow disabling context7 via environment variable', () => {
+      process.env.ENABLE_CONTEXT7 = 'false'
+      try {
+        const config = loadConfigFromEnv()
+
+        expect(config.context7).toEqual({
+          enabled: false,
+          url: 'https://mcp.context7.com/mcp',
+          apiKey: undefined,
+        })
+      } finally {
+        delete process.env.ENABLE_CONTEXT7
+      }
+    })
   })
 
   describe('validateConfig', () => {

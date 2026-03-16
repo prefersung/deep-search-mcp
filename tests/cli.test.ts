@@ -44,7 +44,7 @@ describe('CLI', () => {
 
     vi.doMock('../src/index.js', () => ({ startServer }))
     vi.doMock('../src/config.js', () => ({
-      DEFAULT_CONTEXT7_CONFIG: { enabled: false, url: 'https://mcp.context7.com/mcp' },
+      DEFAULT_CONTEXT7_CONFIG: { enabled: true, url: 'https://mcp.context7.com/mcp' },
       loadConfigFromEnv,
       validateConfig,
     }))
@@ -79,7 +79,7 @@ describe('CLI', () => {
       timeout: 15000,
       ignoreSSL: true,
       context7: {
-        enabled: false,
+        enabled: true,
         apiKey: undefined,
         url: undefined,
       },
@@ -87,6 +87,50 @@ describe('CLI', () => {
     expect(validateConfig).toHaveBeenCalledTimes(1)
     expect(resolveProxyUrl).toHaveBeenCalledWith('system')
     expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toBe('0')
+    errorSpy.mockRestore()
+  })
+
+  it('should disable context7 when --no-context7 is provided', async () => {
+    const startServer = vi.fn().mockResolvedValue(undefined)
+    const loadConfigFromEnv = vi.fn((options: Record<string, unknown>) => ({
+      proxy: options.proxy as string,
+      webSearch: options.webSearch as 'duckduckgo' | 'exa' | 'bocha',
+      timeout: options.timeout as number,
+      ignoreSSL: options.ignoreSSL as boolean,
+      context7: options.context7 as Record<string, unknown> | undefined,
+    }))
+    const validateConfig = vi.fn()
+
+    vi.doMock('../src/index.js', () => ({ startServer }))
+    vi.doMock('../src/config.js', () => ({
+      DEFAULT_CONTEXT7_CONFIG: { enabled: true, url: 'https://mcp.context7.com/mcp' },
+      loadConfigFromEnv,
+      validateConfig,
+    }))
+    vi.doMock('../src/proxy/index.js', () => ({ resolveProxyUrl: vi.fn().mockResolvedValue(null) }))
+    vi.doMock('../src/proxy/windows.js', () => ({
+      detectSystemProxy: vi.fn().mockResolvedValue(null),
+      getWindowsProxySettings: vi.fn().mockResolvedValue({ enabled: false }),
+    }))
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    process.argv = ['node', 'cli.js', '--no-context7']
+
+    await import('../src/cli.js')
+    await vi.waitFor(() => expect(startServer).toHaveBeenCalledTimes(1))
+
+    expect(loadConfigFromEnv).toHaveBeenCalledWith({
+      proxy: 'none',
+      webSearch: 'duckduckgo',
+      bochaApiKey: undefined,
+      timeout: 30000,
+      ignoreSSL: false,
+      context7: {
+        enabled: false,
+        apiKey: undefined,
+        url: undefined,
+      },
+    })
     errorSpy.mockRestore()
   })
 
@@ -108,7 +152,7 @@ describe('CLI', () => {
 
     vi.doMock('../src/index.js', () => ({ startServer }))
     vi.doMock('../src/config.js', () => ({
-      DEFAULT_CONTEXT7_CONFIG: { enabled: false, url: 'https://mcp.context7.com/mcp' },
+      DEFAULT_CONTEXT7_CONFIG: { enabled: true, url: 'https://mcp.context7.com/mcp' },
       loadConfigFromEnv,
       validateConfig,
     }))
@@ -145,7 +189,7 @@ describe('CLI', () => {
 
     vi.doMock('../src/index.js', () => ({ startServer: vi.fn() }))
     vi.doMock('../src/config.js', () => ({
-      DEFAULT_CONTEXT7_CONFIG: { enabled: false, url: 'https://mcp.context7.com/mcp' },
+      DEFAULT_CONTEXT7_CONFIG: { enabled: true, url: 'https://mcp.context7.com/mcp' },
       loadConfigFromEnv: vi.fn(),
       validateConfig: vi.fn(),
     }))
@@ -188,7 +232,7 @@ describe('CLI', () => {
 
     vi.doMock('../src/index.js', () => ({ startServer: vi.fn() }))
     vi.doMock('../src/config.js', () => ({
-      DEFAULT_CONTEXT7_CONFIG: { enabled: false, url: 'https://mcp.context7.com/mcp' },
+      DEFAULT_CONTEXT7_CONFIG: { enabled: true, url: 'https://mcp.context7.com/mcp' },
       loadConfigFromEnv: vi.fn(),
       validateConfig: vi.fn(),
     }))
@@ -250,7 +294,7 @@ describe('CLI', () => {
 
     vi.doMock('../src/index.js', () => ({ startServer: vi.fn() }))
     vi.doMock('../src/config.js', () => ({
-      DEFAULT_CONTEXT7_CONFIG: { enabled: false, url: 'https://mcp.context7.com/mcp' },
+      DEFAULT_CONTEXT7_CONFIG: { enabled: true, url: 'https://mcp.context7.com/mcp' },
       loadConfigFromEnv: vi.fn(),
       validateConfig: vi.fn(),
     }))
@@ -317,7 +361,7 @@ describe('CLI', () => {
 
     vi.doMock('../src/index.js', () => ({ startServer: vi.fn() }))
     vi.doMock('../src/config.js', () => ({
-      DEFAULT_CONTEXT7_CONFIG: { enabled: false, url: 'https://mcp.context7.com/mcp' },
+      DEFAULT_CONTEXT7_CONFIG: { enabled: true, url: 'https://mcp.context7.com/mcp' },
       loadConfigFromEnv: vi.fn(),
       validateConfig: vi.fn(),
     }))
