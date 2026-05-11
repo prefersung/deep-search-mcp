@@ -27,6 +27,7 @@ interface CliOptions {
   bochaApiKey?: string
   semanticScholarApiKey?: string
   pubmedApiKey?: string
+  unpaywallEmail?: string
   timeout: string
   ignoreSsl: boolean
   context7: boolean
@@ -96,6 +97,7 @@ program
   .option('--bocha-api-key <key>', '博查 AI API Key (建议使用环境变量 BOCHA_API_KEY)')
   .option('--semantic-scholar-api-key <key>', 'Semantic Scholar API Key (建议使用环境变量 SEMANTIC_SCHOLAR_API_KEY)')
   .option('--pubmed-api-key <key>', 'PubMed / NCBI API Key (建议使用环境变量 PUBMED_API_KEY)')
+  .option('--unpaywall-email <email>', 'Unpaywall 联系邮箱 (建议使用环境变量 UNPAYWALL_EMAIL)')
   .option('-t, --timeout <ms>', '请求超时时间(毫秒)', '30000')
   .option('--ignore-ssl', '忽略 SSL 证书校验 (解决代理证书问题)', false)
   .option('--no-context7', '禁用官方 Context7 MCP 透传（默认启用）')
@@ -109,6 +111,7 @@ program
         bochaApiKey: options.bochaApiKey,
         semanticScholarApiKey: options.semanticScholarApiKey,
         pubmedApiKey: options.pubmedApiKey,
+        unpaywallEmail: options.unpaywallEmail,
         timeout: parseInt(options.timeout, 10),
         ignoreSSL: options.ignoreSsl,
         context7: {

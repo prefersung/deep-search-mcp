@@ -119,7 +119,7 @@ describe('MCP Server Runtime', () => {
     const listResult = (await mockState.listHandler!()) as {
       tools: Array<{ name: string; description: string }>
     }
-    expect(listResult.tools.map((t) => t.name)).toEqual(['web_search', 'web_fetch'])
+    expect(listResult.tools.map((t) => t.name)).toEqual(['web_search', 'web_fetch', 'get_paper', 'find_open_pdf'])
     expect(listResult.tools[0]?.description).toBe('mock-search-desc')
     expect(listResult.tools[1]?.description).toBe('mock-web-fetch-desc')
   })

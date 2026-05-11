@@ -16,6 +16,8 @@ import type { Config } from './config.js'
 import { Context7Bridge } from './context7/bridge.js'
 import { createSearchEngine, getSearchEngineDescription } from './search/index.js'
 import { WebFetch, getWebFetchDescription } from './tools/web-fetch.js'
+import { FindOpenPdf, getFindOpenPdfDescription } from './tools/find-open-pdf.js'
+import { GetPaper, getGetPaperDescription } from './tools/get-paper.js'
 
 export interface ServerRuntime {
   close(): Promise<void>
@@ -37,6 +39,14 @@ const WebFetchSchema = z.object({
   timeout: z.number().min(1).max(120).optional().describe('超时时间(秒)，1-120秒'),
 })
 
+const GetPaperSchema = z.object({
+  id: z.string().describe('论文 ID：arXiv ID (2301.00001)、DOI (10.xxxx/xxx)、PMID，或对应 URL'),
+})
+
+const FindOpenPdfSchema = z.object({
+  doi: z.string().describe('论文 DOI，支持格式：10.xxxx/xxx、doi:...、https://doi.org/...'),
+})
+
 /**
  * 启动 MCP Server
  */
@@ -44,6 +54,8 @@ export async function startServer(config: Config): Promise<ServerRuntime> {
   // 创建搜索引擎实例
   const searchEngine = createSearchEngine(config)
   const webFetch = new WebFetch(config)
+  const getPaper = new GetPaper(config)
+  const findOpenPdf = new FindOpenPdf(config)
   const context7Bridge = new Context7Bridge(config)
 
   // 创建 MCP Server
@@ -70,6 +82,16 @@ export async function startServer(config: Config): Promise<ServerRuntime> {
         name: 'web_fetch',
         description: getWebFetchDescription(),
         inputSchema: zodToJsonSchema(WebFetchSchema) as Tool['inputSchema'],
+      },
+      {
+        name: 'get_paper',
+        description: getGetPaperDescription(),
+        inputSchema: zodToJsonSchema(GetPaperSchema) as Tool['inputSchema'],
+      },
+      {
+        name: 'find_open_pdf',
+        description: getFindOpenPdfDescription(),
+        inputSchema: zodToJsonSchema(FindOpenPdfSchema) as Tool['inputSchema'],
       },
     ]
 
@@ -124,6 +146,38 @@ export async function startServer(config: Config): Promise<ServerRuntime> {
               },
             ],
           }
+        }
+
+        case 'get_paper': {
+          const params = GetPaperSchema.parse(args)
+          const paper = await getPaper.get(params.id)
+          const lines: string[] = [
+            `# ${paper.title}`,
+            ``,
+            `**Authors:** ${paper.authors.join(', ') || '(unknown)'}`,
+          ]
+          if (paper.published) lines.push(`**Published:** ${paper.published}`)
+          if (paper.journal) lines.push(`**Journal:** ${paper.journal}`)
+          if (paper.doi) lines.push(`**DOI:** ${paper.doi}`)
+          if (paper.arxivId) lines.push(`**arXiv:** ${paper.arxivId}`)
+          if (paper.pmid) lines.push(`**PMID:** ${paper.pmid}`)
+          lines.push(`**URL:** ${paper.url}`)
+          if (paper.pdfUrl) lines.push(`**PDF:** ${paper.pdfUrl}`)
+          if (paper.abstract) lines.push(``, `## Abstract`, ``, paper.abstract)
+          return { content: [{ type: 'text', text: lines.join('\n') }] }
+        }
+
+        case 'find_open_pdf': {
+          const params = FindOpenPdfSchema.parse(args)
+          const result = await findOpenPdf.find(params.doi)
+          const lines: string[] = [`**DOI:** ${result.doi}`]
+          if (result.title) lines.push(`**Title:** ${result.title}`)
+          lines.push(`**Open Access:** ${result.isOpenAccess ? 'Yes' : 'No'}`)
+          if (result.pdfUrl) lines.push(`**PDF URL:** ${result.pdfUrl}`)
+          if (result.hostType) lines.push(`**Host:** ${result.hostType}`)
+          if (result.version) lines.push(`**Version:** ${result.version}`)
+          lines.push(``, result.message)
+          return { content: [{ type: 'text', text: lines.join('\n') }] }
         }
 
         default:

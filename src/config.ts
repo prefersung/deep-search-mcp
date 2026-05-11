@@ -24,6 +24,8 @@ export interface Config {
   semanticScholarApiKey?: string
   /** PubMed / NCBI API Key（可选，提升限速上限） */
   pubmedApiKey?: string
+  /** Unpaywall 联系邮箱（ToS 要求，不做验证） */
+  unpaywallEmail?: string
   /** 请求超时(毫秒) */
   timeout: number
   /** 忽略 SSL 证书校验 */
@@ -73,6 +75,7 @@ export function loadConfigFromEnv(
     bochaApiKey: partial.bochaApiKey || process.env.BOCHA_API_KEY,
     semanticScholarApiKey: partial.semanticScholarApiKey || process.env.SEMANTIC_SCHOLAR_API_KEY,
     pubmedApiKey: partial.pubmedApiKey || process.env.PUBMED_API_KEY,
+    unpaywallEmail: partial.unpaywallEmail || process.env.UNPAYWALL_EMAIL,
     timeout: partial.timeout || parseInt(process.env.TIMEOUT || '') || DEFAULT_CONFIG.timeout,
     ignoreSSL:
       partial.ignoreSSL ??

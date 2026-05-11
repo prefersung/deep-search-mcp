@@ -284,6 +284,34 @@ export class WebFetch {
         }
       }
 
+      // 处理 PDF
+      if (mime === 'application/pdf') {
+        try {
+          const { createRequire } = await import('module')
+          const require = createRequire(import.meta.url)
+          // pdf-parse is CJS; cast to callable to bypass ESM type mismatch
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string; numpages: number; info: Record<string, string> }>
+          const buf = Buffer.from(arrayBuffer)
+          const parsed = await pdfParse(buf)
+          const pageCount = parsed.numpages ?? '?'
+          const text = parsed.text.replace(/\s+/g, ' ').trim()
+          return {
+            title: parsed.info?.Title || `PDF: ${targetUrl}`,
+            content: `Pages: ${pageCount}\n\n${text}`,
+            url: targetUrl,
+            contentType,
+          }
+        } catch {
+          return {
+            title: `PDF: ${targetUrl}`,
+            content: `(PDF 解析失败，文件大小: ${arrayBuffer.byteLength} bytes)`,
+            url: targetUrl,
+            contentType,
+          }
+        }
+      }
+
       const content = new TextDecoder().decode(arrayBuffer)
 
       // 根据格式处理内容
