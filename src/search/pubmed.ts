@@ -74,14 +74,16 @@ export class PubMedSearch extends BaseSearchEngine {
   }
 
   private buildParams(extra: Record<string, string>): URLSearchParams {
-    const p = new URLSearchParams({
-      db: 'pubmed',
-      retmode: 'json',
-      'Accept-Encoding': 'identity',
-      ...extra,
-    })
+    const p = new URLSearchParams({ db: 'pubmed', retmode: 'json', ...extra })
     if (this.apiKey) p.set('api_key', this.apiKey)
     return p
+  }
+
+  private get commonHeaders(): Record<string, string> {
+    return {
+      Accept: 'application/json',
+      'Accept-Encoding': 'identity',
+    }
   }
 
   private async esearch(
@@ -98,7 +100,7 @@ export class PubMedSearch extends BaseSearchEngine {
     const url = `${ESEARCH_URL}?${params.toString()}`
 
     const agent = await getProxyAgent(this.proxy, this.ignoreSSL)
-    const fetchOptions: FetchOptions = { agent, signal }
+    const fetchOptions: FetchOptions = { agent, signal, headers: this.commonHeaders }
 
     const response = await nodeFetch(url, fetchOptions)
     if (!response.ok) {
@@ -122,7 +124,7 @@ export class PubMedSearch extends BaseSearchEngine {
     const url = `${ESUMMARY_URL}?${params.toString()}`
 
     const agent = await getProxyAgent(this.proxy, this.ignoreSSL)
-    const fetchOptions: FetchOptions = { agent, signal }
+    const fetchOptions: FetchOptions = { agent, signal, headers: this.commonHeaders }
 
     const response = await nodeFetch(url, fetchOptions)
     if (!response.ok) {
