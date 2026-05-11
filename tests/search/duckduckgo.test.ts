@@ -27,10 +27,14 @@ describe('DuckDuckGo Search Engine', () => {
     const html = `
       <html>
         <body>
-          <a class="result__a" href="https://duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fa">First Result</a>
-          <a class="result__snippet">First snippet text</a>
-          <a class="result__a" href="https://example.com/b">Second Result</a>
-          <a class="result__snippet">Second snippet text</a>
+          <div class="result">
+            <a class="result__a" href="https://duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fa">First Result</a>
+            <a class="result__snippet">First snippet text</a>
+          </div>
+          <div class="result">
+            <a class="result__a" href="https://example.com/b">Second Result</a>
+            <a class="result__snippet">Second snippet text</a>
+          </div>
         </body>
       </html>
     `

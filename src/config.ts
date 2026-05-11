@@ -2,7 +2,7 @@
  * 配置管理模块
  */
 
-export type SearchEngine = 'duckduckgo' | 'exa' | 'bocha'
+export type SearchEngine = 'duckduckgo' | 'exa' | 'bocha' | 'arxiv' | 'semantic-scholar' | 'pubmed'
 
 export interface Context7Settings {
   /** 是否启用官方 Context7 MCP 透传 */
@@ -20,6 +20,10 @@ export interface Config {
   webSearch: SearchEngine
   /** 博查 API Key */
   bochaApiKey?: string
+  /** Semantic Scholar API Key（可选，提升限速上限） */
+  semanticScholarApiKey?: string
+  /** PubMed / NCBI API Key（可选，提升限速上限） */
+  pubmedApiKey?: string
   /** 请求超时(毫秒) */
   timeout: number
   /** 忽略 SSL 证书校验 */
@@ -67,6 +71,8 @@ export function loadConfigFromEnv(
     webSearch:
       partial.webSearch || (process.env.WEB_SEARCH as SearchEngine) || DEFAULT_CONFIG.webSearch,
     bochaApiKey: partial.bochaApiKey || process.env.BOCHA_API_KEY,
+    semanticScholarApiKey: partial.semanticScholarApiKey || process.env.SEMANTIC_SCHOLAR_API_KEY,
+    pubmedApiKey: partial.pubmedApiKey || process.env.PUBMED_API_KEY,
     timeout: partial.timeout || parseInt(process.env.TIMEOUT || '') || DEFAULT_CONFIG.timeout,
     ignoreSSL:
       partial.ignoreSSL ??

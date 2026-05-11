@@ -1,365 +1,210 @@
-# @chenpu17/web-bridge-mcp
+# deep-search-mcp
 
 [![npm version](https://badge.fury.io/js/@chenpu%2Fweb-bridge-mcp.svg)](https://badge.fury.io/js/@chenpu%2Fweb-bridge-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-105%20passing-brightgreen)](https://github.com/chenpu17/web-bridge-mcp)
 
-支持代理配置的 MCP Server，提供 Web 搜索、网页抓取，以及官方 Context7 文档能力透传。
+> MCP Server for deep web & academic search — with proxy support for restricted networks.
 
-**专为内网环境设计**，让无法直接访问外网的 AI 编程工具（如 Claude Code、OpenCode）也能获取互联网信息。
+Most MCP search tools only wrap a single web search engine. **deep-search-mcp** gives your AI agent **6 search backends** — including three academic databases that most tools completely ignore — and works seamlessly behind corporate proxies with SSL inspection.
 
-## 特性
+## What makes it different
 
-- **代理支持**: 支持 `system`（自动检测系统代理）、`none`（不使用代理）、自定义代理 URL
-- **Windows 系统代理检测**: 自动读取 Windows 注册表获取系统代理配置
-- **SSL 证书忽略**: 支持忽略 SSL 证书校验，解决代理导致的证书问题
-- **多种搜索引擎**: DuckDuckGo（免费）、Exa AI、博查 AI
-- **网页抓取**: 支持 Markdown、纯文本、HTML 格式输出
-- **官方 Context7 透传**: 直连 `https://mcp.context7.com/mcp`，暴露官方 `resolve-library-id` / `query-docs` 工具
-- **Context7 默认开启**: 启动后默认同时暴露搜索、抓取、Context7 文档工具，无需额外参数
-- **Context7 可选鉴权**: 支持 `CONTEXT7_API_KEY`，不配置也可匿名基础使用
-- **Context7 容错更稳**: 远端工具发现失败时保留内置 fallback 元数据，临时网络抖动时自动重连重试一次
-- **npx 运行**: 无需安装，一条命令即可使用
+| Feature | Other MCP search tools | deep-search-mcp |
+|---|---|---|
+| Web search | ✅ | ✅ DuckDuckGo + Exa AI |
+| Academic papers | ❌ | ✅ arXiv + Semantic Scholar + PubMed |
+| Chinese search | ❌ | ✅ Bocha AI |
+| Proxy support | ❌ | ✅ system / custom URL |
+| SSL inspection bypass | ❌ | ✅ `--ignore-ssl` |
+| Free to use | partial | ✅ 4 out of 6 engines need no API key |
+| Context7 docs | ❌ | ✅ built-in |
 
-## 快速开始
-
-```bash
-# 使用 npx 直接运行（推荐）
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
-
-# 或全局安装
-npm install -g @chenpu17/web-bridge-mcp
-web-bridge-mcp --proxy system --ignore-ssl
-```
-
-## 使用方法
-
-### 基本用法
+## Quick start
 
 ```bash
-# 使用 DuckDuckGo 搜索（默认，免费无需配置）
-npx @chenpu17/web-bridge-mcp
+# No install needed
+npx deep-search-mcp --web-search arxiv
 
-# 使用系统代理
-npx @chenpu17/web-bridge-mcp --proxy system
+# Behind a corporate proxy with SSL inspection
+npx deep-search-mcp --proxy system --ignore-ssl --web-search arxiv
 
-# 指定代理地址
-npx @chenpu17/web-bridge-mcp --proxy http://proxy.company.com:8080
-
-# 忽略 SSL 证书校验（解决代理证书问题）
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
+# Custom proxy URL
+npx deep-search-mcp --proxy http://proxy.example.com:8080 --ignore-ssl
 ```
 
-### 启用 Context7
+## Search engines
+
+### Web search
 
 ```bash
-# Context7 默认已启用
-npx @chenpu17/web-bridge-mcp
+# DuckDuckGo — free, no API key
+npx deep-search-mcp --web-search duckduckgo
 
-# 内网推荐：系统代理 + 忽略 SSL + Context7
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
+# Exa AI — AI-ranked results with content snippets
+npx deep-search-mcp --web-search exa
 
-# 配置 Context7 API Key（可选，提高限额）
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --context7-api-key ctx7sk_xxx
-
-# 如需显式关闭 Context7
-npx @chenpu17/web-bridge-mcp --no-context7
+# Bocha AI — best for Chinese content
+npx deep-search-mcp --web-search bocha --bocha-api-key sk-xxx
 ```
 
-### 搜索引擎配置
+### Academic search
 
 ```bash
-# DuckDuckGo（默认，免费）
-npx @chenpu17/web-bridge-mcp --web-search duckduckgo
+# arXiv — preprints across CS, physics, math, biology
+# Free, no key needed
+npx deep-search-mcp --web-search arxiv
 
-# Exa AI（AI 优化搜索）
-npx @chenpu17/web-bridge-mcp --web-search exa
+# Semantic Scholar — 200M+ papers with citation metrics
+# Free; API key optional (raises rate limit)
+npx deep-search-mcp --web-search semantic-scholar
+npx deep-search-mcp --web-search semantic-scholar --semantic-scholar-api-key <key>
 
-# 博查 AI（中文友好，需要 API Key）
-npx @chenpu17/web-bridge-mcp --web-search bocha --bocha-api-key sk-xxx
+# PubMed — 35M+ biomedical and clinical papers (NCBI)
+# Free; API key optional (raises rate limit)
+npx deep-search-mcp --web-search pubmed
+npx deep-search-mcp --web-search pubmed --pubmed-api-key <key>
 ```
 
-### 完整示例（企业内网推荐配置）
+### Academic search results
+
+Each academic result includes everything you need to evaluate a paper at a glance:
+
+```
+1. **Attention Is All You Need**
+   URL: https://arxiv.org/abs/1706.03762
+   作者: Ashish Vaswani, Noam Shazeer, Niki Parmar 等 | 发表: 2017-06-12 | PDF: https://arxiv.org/pdf/1706.03762
+   We propose a new simple network architecture, the Transformer...
+
+2. **BERT: Pre-training of Deep Bidirectional Transformers**
+   URL: https://www.semanticscholar.org/paper/...
+   作者: Jacob Devlin, Ming-Wei Chang | 年份: 2019 | 引用: 50000 | DOI: 10.18653/...
+   We introduce BERT, designed to pre-train deep bidirectional representations...
+```
+
+## Proxy configuration
+
+The proxy options work for all six search engines and the web fetch tool:
 
 ```bash
-# 使用系统代理 + 忽略 SSL + DuckDuckGo + 官方 Context7
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
+# Auto-detect system proxy (reads env vars on Linux/Mac, registry on Windows)
+npx deep-search-mcp --proxy system
 
-# 使用系统代理 + 忽略 SSL + 博查搜索 + 官方 Context7
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl --web-search bocha --bocha-api-key sk-xxx
+# Explicit proxy URL
+npx deep-search-mcp --proxy http://proxy.example.com:8080
+
+# With SSL certificate bypass (needed when proxy does TLS inspection)
+npx deep-search-mcp --proxy system --ignore-ssl
+
+# No proxy
+npx deep-search-mcp --proxy none
 ```
 
-### 环境变量
-
-| 变量名 | 说明 |
-|--------|------|
-| `HTTPS_PROXY` / `HTTP_PROXY` | 代理地址 |
-| `BOCHA_API_KEY` | 博查 AI 的 Bearer Token |
-| `CONTEXT7_API_KEY` | Context7 API Key（可选） |
-| `CONTEXT7_MCP_URL` | Context7 MCP URL，默认 `https://mcp.context7.com/mcp` |
-| `ENABLE_CONTEXT7` | 是否启用 Context7；默认启用，设置为 `false` 可关闭 |
-| `IGNORE_SSL` | 忽略 SSL 证书校验 (设置为 `true`) |
-| `NODE_TLS_REJECT_UNAUTHORIZED` | 设置为 `0` 也可忽略 SSL |
-
-### 命令行参数
-
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| `-p, --proxy <proxy>` | 代理设置: system \| none \| http://... | none |
-| `--web-search <engine>` | 搜索引擎: duckduckgo \| exa \| bocha | duckduckgo |
-| `--bocha-api-key <key>` | 博查 AI API Key | - |
-| `-t, --timeout <ms>` | 请求超时时间(毫秒) | 30000 |
-| `--ignore-ssl` | 忽略 SSL 证书校验 | false |
-| `--no-context7` | 禁用官方 Context7 MCP 透传 | 默认启用 |
-| `--context7-api-key <key>` | Context7 API Key（可选） | - |
-| `--context7-url <url>` | Context7 MCP URL | `https://mcp.context7.com/mcp` |
-
-### 检测系统代理
+**Diagnose your proxy connection:**
 
 ```bash
-npx @chenpu17/web-bridge-mcp detect-proxy
+npx deep-search-mcp diagnose --proxy system --ignore-ssl
 ```
 
-### 诊断代理连接
+This runs 5 checks: proxy detection → connectivity → web search → web fetch → Context7.
 
-测试代理配置是否正常工作，包括连接测试、搜索测试和抓取测试：
+## Claude Code integration
 
-```bash
-# 使用系统代理进行诊断
-npx @chenpu17/web-bridge-mcp diagnose
-
-# 使用指定代理进行诊断
-npx @chenpu17/web-bridge-mcp diagnose --proxy http://proxy.company.com:8080
-
-# 忽略 SSL 证书进行诊断
-npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
-
-# 默认会额外测试 Context7 连通性
-npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl
-
-# 如需跳过 Context7 测试
-npx @chenpu17/web-bridge-mcp diagnose --proxy system --ignore-ssl --no-context7
-```
-
-诊断命令会自动测试：
-1. 代理检测 - 检查代理配置是否正确
-2. 连接测试 - 测试是否能通过代理访问互联网
-3. 搜索测试 - 测试 DuckDuckGo 搜索功能
-4. 抓取测试 - 测试网页内容抓取功能
-5. Context7 测试（默认启用）- 测试官方 Context7 工具发现与调用
-
-每个步骤都会显示详细的测试结果和响应时间，帮助快速定位问题。
-
-如果你准备发布新版本，建议在本机或目标网络环境里至少手动跑一次 `diagnose`，确认代理、匿名访问或 API Key 配置都正常。
-
-## MCP 工具
-
-### web_search
-
-搜索互联网获取信息。
-
-**参数**:
-- `query` (string): 搜索查询内容
-- `numResults` (number, 可选): 返回结果数量，默认 8
-
-### web_fetch
-
-抓取指定 URL 的网页内容。
-
-**参数**:
-- `url` (string): 要抓取的 URL
-- `format` (enum, 可选): 返回格式 - markdown / text / html，默认 markdown
-- `timeout` (number, 可选): 超时时间(秒)，最大 120
-
-### resolve-library-id
-
-官方 Context7 工具，解析库名并返回 Context7 兼容的 library ID。
-
-**参数**:
-- `query` (string): 当前要完成的任务或问题
-- `libraryName` (string): 要查找的库名
-
-### query-docs
-
-官方 Context7 工具，根据 library ID 检索最新文档和代码示例。
-
-**参数**:
-- `libraryId` (string): Context7 兼容库 ID，例如 `/vercel/next.js`
-- `query` (string): 具体问题或任务
-
-## 在 Claude Code 中使用
-
-在 Claude Code 的配置文件中添加 MCP Server：
+Add to your Claude Code MCP config:
 
 ```json
 {
   "mcpServers": {
-    "proxy-web": {
+    "deep-search": {
       "command": "npx",
       "args": [
-        "@chenpu17/web-bridge-mcp",
+        "deep-search-mcp",
         "--proxy", "system",
         "--ignore-ssl",
-        "--web-search", "duckduckgo"
+        "--web-search", "arxiv"
       ]
     }
   }
 }
 ```
 
-如果使用博查搜索：
+For biomedical research:
 
 ```json
 {
   "mcpServers": {
-    "proxy-web": {
+    "deep-search": {
       "command": "npx",
       "args": [
-        "@chenpu17/web-bridge-mcp",
+        "deep-search-mcp",
         "--proxy", "system",
         "--ignore-ssl",
-        "--web-search", "bocha",
-        "--bocha-api-key", "sk-xxx"
-      ]
+        "--web-search", "pubmed"
+      ],
+      "env": {
+        "PUBMED_API_KEY": "your-ncbi-key"
+      }
     }
   }
 }
 ```
 
-如果 Context7 需要更高限额，可追加 API Key：
+## MCP tools exposed
 
-```json
-{
-  "mcpServers": {
-    "proxy-web": {
-      "command": "npx",
-      "args": [
-        "@chenpu17/web-bridge-mcp",
-        "--proxy", "system",
-        "--ignore-ssl",
-        "--context7-api-key", "ctx7sk_xxx"
-      ]
-    }
-  }
-}
-```
+| Tool | Description |
+|---|---|
+| `web_search` | Search using the configured engine |
+| `web_fetch` | Fetch and convert any URL to markdown / text / HTML |
+| `resolve-library-id` | Context7: find a library's ID |
+| `query-docs` | Context7: retrieve library documentation |
 
-## 搜索引擎对比
+## All options
 
-| 搜索引擎 | 免费 | 鉴权方式 | 特点 |
-|---------|------|---------|------|
-| DuckDuckGo | ✅ | 无需 | 免费、无限制，结果质量一般 |
-| Exa AI | ❌ | 无需（MCP端点） | AI 优化搜索，结果质量高 |
-| 博查 AI | ❌ | Bearer Token | 中文搜索友好 |
+| Option | Description | Default |
+|---|---|---|
+| `-p, --proxy <proxy>` | `system` \| `none` \| `http://...` | reads env vars |
+| `--web-search <engine>` | `duckduckgo` \| `exa` \| `bocha` \| `arxiv` \| `semantic-scholar` \| `pubmed` | `duckduckgo` |
+| `--bocha-api-key <key>` | Bocha AI API key | `BOCHA_API_KEY` env |
+| `--semantic-scholar-api-key <key>` | Semantic Scholar API key | `SEMANTIC_SCHOLAR_API_KEY` env |
+| `--pubmed-api-key <key>` | PubMed / NCBI API key | `PUBMED_API_KEY` env |
+| `-t, --timeout <ms>` | Request timeout in ms | `30000` |
+| `--ignore-ssl` | Bypass SSL certificate verification | `false` |
+| `--no-context7` | Disable Context7 tool passthrough | enabled by default |
+| `--context7-api-key <key>` | Context7 API key (optional) | `CONTEXT7_API_KEY` env |
 
-## 常见问题
-
-### 1. 代理证书错误
-
-如果遇到 `UNABLE_TO_VERIFY_LEAF_SIGNATURE` 错误，请添加 `--ignore-ssl` 参数：
+## Environment variables
 
 ```bash
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
+HTTPS_PROXY=http://proxy.example.com:8080
+BOCHA_API_KEY=sk-xxx
+SEMANTIC_SCHOLAR_API_KEY=xxx
+PUBMED_API_KEY=xxx
+CONTEXT7_API_KEY=ctx7sk_xxx
+IGNORE_SSL=true
 ```
 
-### 2. Windows 系统代理未检测到
+## Search engine comparison
 
-确保系统代理已正确配置：
-1. 打开「设置」→「网络和 Internet」→「代理」
-2. 检查「使用代理服务器」是否已开启
+| Engine | Free | Key required | Best for |
+|---|---|---|---|
+| DuckDuckGo | ✅ | No | General web search |
+| Exa AI | ❌ | No (MCP endpoint) | AI-ranked web results |
+| Bocha AI | ❌ | Yes | Chinese content |
+| arXiv | ✅ | No | Preprints (CS, physics, math, bio) |
+| Semantic Scholar | ✅ | Optional | Cross-discipline papers + citations |
+| PubMed | ✅ | Optional | Biomedical & clinical research |
 
-### 3. 博查搜索认证失败
-
-确保 API Key 正确，可以通过环境变量或命令行参数配置：
-
-```bash
-# 方式1: 命令行参数
-npx @chenpu17/web-bridge-mcp --web-search bocha --bocha-api-key sk-xxx
-
-# 方式2: 环境变量
-export BOCHA_API_KEY=sk-xxx
-npx @chenpu17/web-bridge-mcp --web-search bocha
-```
-
-### 4. Context7 是否必须鉴权？
-
-不是必须。官方远端 MCP 在很多场景下支持匿名基础使用，但限额更低。
-
-如果你在企业内网长期使用，建议配置 `CONTEXT7_API_KEY` 或 `--context7-api-key`，这样更稳定，也更接近官方推荐方式：
+## Development
 
 ```bash
-export CONTEXT7_API_KEY=ctx7sk_xxx
-npx @chenpu17/web-bridge-mcp --proxy system --ignore-ssl
-```
-
-## 开发
-
-```bash
-# 克隆仓库
-git clone https://github.com/chenpu/web-bridge-mcp.git
-cd web-bridge-mcp
-
-# 安装依赖
+git clone https://github.com/your-name/deep-search-mcp.git
+cd deep-search-mcp
 npm install
-
-# 开发模式
-npm run dev -- --proxy system --ignore-ssl
-
-# 构建
-npm run build
-
-# 运行构建产物
-npm start -- --proxy system --ignore-ssl
-
-# 运行测试
+npm run dev -- --proxy system --ignore-ssl --web-search arxiv
 npm test
-
-# 代码质量检查
-npm run lint
-
-# 格式化代码
-npm run format
-
-# 类型检查
-npm run typecheck
+npm run build
 ```
-
-## 贡献指南
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
-3. 运行测试确保通过 (`npm test`)
-4. 运行 lint 检查 (`npm run lint`)
-5. 提交更改
-6. 推送到分支
-7. 创建 Pull Request
-
-## 技术栈
-
-- **Runtime**: Node.js >= 18
-- **Language**: TypeScript
-- **Framework**: MCP SDK
-- **Testing**: Vitest
-- **Linting**: ESLint + TypeScript ESLint
-- **Formatting**: Prettier
-
-## 安全性
-
-### SSRF 防护
-
-本项目实现了多层 SSRF (Server-Side Request Forgery) 防护：
-
-- **内网 IP 段阻止**: 自动阻止访问私有 IP 地址
-- **敏感端口过滤**: 禁止访问数据库、邮件等敏感服务端口
-- **IPv6 支持**: 同时检测 IPv4 和 IPv6 内网地址
-- **本地地址拦截**: 阻止 localhost 和本地回环地址
-
-### 最佳实践
-
-- 使用环境变量存储敏感信息（API Keys）
-- 支持忽略 SSL 证书校验（仅限受信任的网络环境）
-- 响应大小限制（5MB）
-- 请求超时控制
 
 ## License
 
-MIT © chenpu
+MIT

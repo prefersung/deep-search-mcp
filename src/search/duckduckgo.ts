@@ -1,3 +1,4 @@
+import * as cheerio from 'cheerio'
 import { BaseSearchEngine, type SearchOptions, type SearchResult } from './types.js'
 import { getProxyAgent } from '../proxy/index.js'
 import type { FetchOptions } from '../types.js'
@@ -47,40 +48,26 @@ export class DuckDuckGoSearch extends BaseSearchEngine {
   }
 
   private parseResults(html: string, maxResults: number): SearchResult[] {
+    const $ = cheerio.load(html)
     const results: SearchResult[] = []
 
-    const resultRegex = /<a[^>]*class="result__a"[^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/g
-    const snippetRegex = /<a[^>]*class="result__snippet"[^>]*>([^<]*(?:<[^>]*>[^<]*)*)<\/a>/g
+    $('.result').each((_, el) => {
+      if (results.length >= maxResults) return
 
-    let match
+      const titleEl = $(el).find('.result__a')
+      const snippetEl = $(el).find('.result__snippet')
 
-    while ((match = resultRegex.exec(html)) !== null && results.length < maxResults) {
-      const url = match[1]
-      const title = this.stripHtml(match[2])
+      const title = titleEl.text().trim()
+      const rawHref = titleEl.attr('href') ?? ''
+      const snippet = snippetEl.text().trim()
+      const url = this.extractActualUrl(rawHref)
 
-      const actualUrl = this.extractActualUrl(url)
-
-      if (actualUrl) {
-        results.push({
-          title,
-          url: actualUrl,
-          snippet: '',
-        })
-      }
-    }
-
-    const snippets: string[] = []
-    while ((match = snippetRegex.exec(html)) !== null) {
-      snippets.push(this.stripHtml(match[1]))
-    }
-
-    results.forEach((result, index) => {
-      if (snippets[index]) {
-        result.snippet = snippets[index]
+      if (url && title) {
+        results.push({ title, url, snippet })
       }
     })
 
-    return results.slice(0, maxResults)
+    return results
   }
 
   private extractActualUrl(redirectUrl: string): string | null {
@@ -97,14 +84,4 @@ export class DuckDuckGoSearch extends BaseSearchEngine {
     }
   }
 
-  private stripHtml(html: string): string {
-    return html
-      .replace(/<[^>]*>/g, '')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .trim()
-  }
 }

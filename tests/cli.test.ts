@@ -120,7 +120,7 @@ describe('CLI', () => {
     await vi.waitFor(() => expect(startServer).toHaveBeenCalledTimes(1))
 
     expect(loadConfigFromEnv).toHaveBeenCalledWith({
-      proxy: 'none',
+      proxy: undefined,
       webSearch: 'duckduckgo',
       bochaApiKey: undefined,
       timeout: 30000,

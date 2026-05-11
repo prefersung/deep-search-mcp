@@ -28,11 +28,8 @@ const PRIVATE_IP_PATTERNS = [
   /^192\.168\./,
   /^169\.254\./,
   /^0\.0\.0\.0/,
-  /^\[::1\]$/,
   /^::1$/,
-  /^\[f[cd][0-9a-f]{2}:/i,
   /^f[cd][0-9a-f]{2}:/i,
-  /^\[fe[89ab][0-9a-f]:/i,
   /^fe[89ab][0-9a-f]:/i,
 ]
 
@@ -94,15 +91,6 @@ export function isPrivateUrl(urlString: string): boolean {
     for (const pattern of PRIVATE_IP_PATTERNS) {
       if (pattern.test(hostname)) {
         return true
-      }
-    }
-
-    const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/
-    if (ipPattern.test(hostname)) {
-      for (const pattern of PRIVATE_IP_PATTERNS) {
-        if (pattern.test(hostname)) {
-          return true
-        }
       }
     }
 

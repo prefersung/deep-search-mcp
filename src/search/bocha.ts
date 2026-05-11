@@ -29,6 +29,9 @@ export class BochaSearch extends BaseSearchEngine {
     const agent = await getProxyAgent(this.proxy, this.ignoreSSL)
     const nodeFetch = (await import('node-fetch')).default
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+
     const initRequest = {
       jsonrpc: '2.0',
       id: ++this.requestId,
@@ -43,23 +46,33 @@ export class BochaSearch extends BaseSearchEngine {
       },
     }
 
-    const response = await nodeFetch(this.API_URL, {
-      method: 'POST',
-      agent,
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json, text/event-stream',
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify(initRequest),
-    })
+    try {
+      const response = await nodeFetch(this.API_URL, {
+        method: 'POST',
+        agent,
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json, text/event-stream',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(initRequest),
+        signal: controller.signal,
+      })
 
-    // 从响应头获取 session ID
-    const sessionId = response.headers.get('mcp-session-id')
-    if (sessionId) {
-      this.sessionId = sessionId
-    } else {
-      throw new Error('Bocha search initialization failed: No session ID received')
+      // 从响应头获取 session ID
+      const sessionId = response.headers.get('mcp-session-id')
+      if (sessionId) {
+        this.sessionId = sessionId
+      } else {
+        throw new Error('Bocha search initialization failed: No session ID received')
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Bocha session initialization timeout (${this.timeout}ms)`)
+      }
+      throw error
+    } finally {
+      clearTimeout(timeoutId)
     }
   }
 

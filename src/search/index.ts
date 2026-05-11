@@ -6,6 +6,9 @@ import type { Config, SearchEngine } from '../config.js'
 import { DuckDuckGoSearch } from './duckduckgo.js'
 import { ExaSearch } from './exa.js'
 import { BochaSearch } from './bocha.js'
+import { ArxivSearch } from './arxiv.js'
+import { SemanticScholarSearch } from './semantic-scholar.js'
+import { PubMedSearch } from './pubmed.js'
 import type { SearchEngineInterface, SearchOptions, SearchResult } from './types.js'
 
 export type { SearchEngineInterface, SearchOptions, SearchResult }
@@ -14,7 +17,7 @@ export type { SearchEngineInterface, SearchOptions, SearchResult }
  * 创建搜索引擎实例
  */
 export function createSearchEngine(config: Config): SearchEngineInterface {
-  const { webSearch, proxy, timeout, ignoreSSL, bochaApiKey } = config
+  const { webSearch, proxy, timeout, ignoreSSL, bochaApiKey, semanticScholarApiKey, pubmedApiKey } = config
 
   switch (webSearch) {
     case 'duckduckgo':
@@ -28,6 +31,15 @@ export function createSearchEngine(config: Config): SearchEngineInterface {
         throw new Error('博查搜索需要配置 bochaApiKey')
       }
       return new BochaSearch(bochaApiKey, proxy, timeout, ignoreSSL)
+
+    case 'arxiv':
+      return new ArxivSearch(proxy, timeout, ignoreSSL)
+
+    case 'semantic-scholar':
+      return new SemanticScholarSearch(proxy, timeout, ignoreSSL, semanticScholarApiKey)
+
+    case 'pubmed':
+      return new PubMedSearch(proxy, timeout, ignoreSSL, pubmedApiKey)
 
     default: {
       const _exhaustiveCheck: never = webSearch
@@ -79,6 +91,42 @@ Usage notes:
 - Best for Chinese content searches
 - Optimized for China-localized information
 - Supports real-time web crawling`,
+
+    pubmed: `Search biomedical literature using PubMed - free, API key optional
+- Covers medicine, biology, genomics, pharmacology, and life sciences
+- Returns paper titles, authors, publication dates, journals, and DOIs
+- Results sorted by relevance
+
+Usage notes:
+- Use this for biomedical and clinical research papers
+- API key is optional but recommended for higher rate limits (--pubmed-api-key or PUBMED_API_KEY)
+- For full abstracts, follow up with web_fetch on the returned PubMed URL
+- Free to use, maintained by NCBI`,
+
+    'semantic-scholar': `Search academic papers using Semantic Scholar - free, API key optional
+- Covers computer science, biomedical, and interdisciplinary research
+- Returns paper titles, authors, year, citation counts, abstracts, and open-access PDF links
+- Results sorted by relevance with citation-based ranking
+
+Usage notes:
+- Use this for finding research papers with citation metrics
+- API key is optional but recommended for higher rate limits (--semantic-scholar-api-key or SEMANTIC_SCHOLAR_API_KEY)
+- Each result includes citation count to gauge paper impact
+- For full paper content, follow up with web_fetch on the returned URL
+- Free to use`,
+
+    arxiv: `Search academic papers on arXiv - free, no API key required
+- Covers physics, mathematics, computer science, quantitative biology, statistics, and more
+- Returns paper titles, authors, publication dates, abstracts, and PDF links
+- Searches across all fields by default (title, abstract, authors, etc.)
+- Results sorted by relevance
+
+Usage notes:
+- Use this for finding research papers and preprints on arXiv
+- Each result includes a direct link to the abstract page and PDF
+- For full paper content, follow up with web_fetch on the returned URL
+- Supports both English and Chinese queries (English recommended for better coverage)
+- Free to use, no API key required`,
   }
 
   return descriptions[engine]

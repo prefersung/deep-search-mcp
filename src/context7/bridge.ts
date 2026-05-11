@@ -219,9 +219,11 @@ export class Context7Bridge {
       await this.ensureConnected()
       return await operation()
     } catch (error) {
+      // HTTP transport can go stale silently (no onclose event). Invalidate and
+      // reconnect once on any error so transient connection drops self-heal.
       await this.invalidateConnection()
       await this.ensureConnected()
-      return operation()
+      return await operation()
     }
   }
 

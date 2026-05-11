@@ -101,22 +101,3 @@ export async function getProxyAgent(
   return cachedAgent
 }
 
-/**
- * 创建带代理的 fetch 函数
- */
-export function createProxiedFetch(
-  proxy: ProxyConfig,
-  ignoreSSL: boolean = false
-): (url: string, init?: RequestInit) => Promise<unknown> {
-  return async (url: string, init?: RequestInit) => {
-    const agent = await getProxyAgent(proxy, ignoreSSL)
-
-    // 动态导入 node-fetch (Node.js 环境)
-    const nodeFetch = (await import('node-fetch')).default
-
-    return nodeFetch(url, {
-      ...init,
-      agent,
-    } as RequestInit)
-  }
-}
