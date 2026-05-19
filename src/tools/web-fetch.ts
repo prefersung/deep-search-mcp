@@ -4,6 +4,8 @@ import { promises as dns } from 'dns'
 import { getProxyAgent } from '../proxy/index.js'
 import type { Config } from '../config.js'
 import type { FetchOptions } from '../types.js'
+import { isIP } from 'net';  // Node.js 内置模块
+
 
 export interface WebFetchOptions {
   url: string
@@ -39,17 +41,26 @@ const BLOCKED_HOSTNAMES = ['localhost', 'localhost.localdomain', 'ip6-localhost'
  * 检查 URL 是否为内网地址（SSRF 防护）
  */
 const BLOCKED_PORTS = [
-  22, // SSH
-  23, // Telnet
-  25, // SMTP
-  110, // POP3
-  143, // IMAP
-  993, // IMAPS
-  995, // POP3S
-  3306, // MySQL
-  5432, // PostgreSQL
-  6379, // Redis
+  22,    // SSH
+  23,    // Telnet
+  25,    // SMTP
+  53,    // DNS
+  110,   // POP3
+  143,   // IMAP
+  445,   // SMB
+  993,   // IMAPS
+  995,   // POP3S
+  3306,  // MySQL
+  3389,  // RDP
+  5432,  // PostgreSQL
+  6379,  // Redis
   27017, // MongoDB
+  9200,  // Elasticsearch
+  2375,  // Docker
+  2376,  // Docker TLS
+  6443,  // Kubernetes API
+  8080,  // Alternative HTTP
+  8443,  // Alternative HTTPS
 ]
 
 export function isPrivateUrl(urlString: string): boolean {
